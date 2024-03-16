@@ -1,0 +1,9 @@
+/.configs/
+/.venv312/
+/dist/
+/build/
+/.idea/
+/.record/
+/Releases Markdown/
+*.spec
+Build_EXE.txt
