@@ -7,3 +7,5 @@
 /Releases Markdown/
 *.spec
 Build_EXE.txt
+*.ttf
+*.ink
