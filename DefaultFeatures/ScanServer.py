@@ -25,7 +25,7 @@ from UI.tools import showException
 from Lib.Configs import read_default_yaml, BASE_PATH, FontFamily, NormalFont
 from UI.RegisterUI import register
 
-from PyQt5.QtWidgets import QLineEdit, QProgressBar, QHBoxLayout
+from PyQt5.QtWidgets import QLineEdit, QProgressBar, QHBoxLayout, QApplication
 
 from enum import IntEnum
 
@@ -113,6 +113,21 @@ class CallbackPushButton(QPushButton):
         super().__init__(*args)
 
 
+def _html_add_background_color(
+        target_color: tuple[int, int, int],
+        background_color: tuple[int, int, int],
+        html_text: str
+) -> str:
+
+    text_rgb_str = f"rgb({target_color[0]}, {target_color[1]}, {target_color[2]})"
+    background_rgb_str = f"rgb({background_color[0]}, {background_color[1]}, {background_color[2]})"
+
+    return html_text.replace(
+        f"<span style='color: {text_rgb_str};'>",
+        f"<span style='color: {text_rgb_str}; background-color: {background_rgb_str};'>"
+    )
+
+
 def _spawn_info_widget(server_info: ServerInfo, host: str, port: int):
     widget = QWidget()
     root_layout = QHBoxLayout()
@@ -175,12 +190,17 @@ def _spawn_info_widget(server_info: ServerInfo, host: str, port: int):
 
         if server_info.players.sample is not None:
             for player in server_info.players.sample:
-                print(player.name, player.name.to_html())
                 player_html += f"{html_space*4}{player.name.to_html()}<br/>"
         player_html += "</span>"
-        player_html.replace(
-            "<span style='color: rgb(255, 255, 255);'>",
-            "<span style='color: rgb(255, 255, 255); background-color: rgb(220, 220, 220);'>"
+        player_html = _html_add_background_color(
+            (255, 255, 255),
+            (180, 180, 180),
+            player_html
+        )
+        player_html = _html_add_background_color(
+            (255, 255, 85),
+            (220, 220, 220),
+            player_html
         )
 
         msg_box.setText(player_html)
@@ -195,9 +215,15 @@ def _spawn_info_widget(server_info: ServerInfo, host: str, port: int):
     desc_label = QLabel()
 
     desc_html = ColorString.from_string(server_info.description.to_string()).to_html()
-    desc_html = desc_html.replace(
-        "<span style='color: rgb(255, 255, 255);'>",
-        "<span style='color: rgb(255, 255, 255); background-color: rgb(220, 220, 220);'>"
+    desc_html = _html_add_background_color(
+        (255, 255, 255),
+        (220, 220, 220),
+        desc_html
+    )
+    desc_html = _html_add_background_color(
+        (255, 255, 85),
+        (220, 220, 220),
+        desc_html
     )
     desc_html = f"<span>{desc_html.replace('\n', "<br/>")}</span>"
     desc_label.setText(desc_html)
@@ -253,7 +279,7 @@ class ServerScan(AbcUI):
 
             widget = _spawn_info_widget(server_info, e.host, e.port)
 
-            item.setSizeHint(QSize(0, 64))
+            item.setSizeHint(QSize(0, 64 + 15))
 
             self.show_result_list.addItem(item)
             self.show_result_list.setItemWidget(item, widget)
@@ -378,41 +404,68 @@ class ServerScan(AbcUI):
 
         html_space = "&nbsp;"
 
-        if server_info.players.sample is not None:
-            player_list_str = "玩家列表:\n"
-            player_list_str += '\n'.join(
-                [
-                    f"{html_space * 4}{player.name.to_html()}{html_space}({player.id})"
-                    for player in server_info.players.sample
-                ]
-            )
-            player_list_str += '\n'
-        else:
-            player_list_str = ''
-
         description = ColorString.from_string(server_info.description.to_string()).to_html()
         description_list = description.split('\n')
         description_html = '\n'.join(
             [f"{html_space * 4}{line}" for line in description_list]
         )
 
+        if server_info.players.sample is not None:
+            player_list_str = "玩家列表:\n"
+            for player in server_info.players.sample:
+                player_list_str += f"{html_space * 4}{player.name.to_html()}{html_space}({player.id})\n"
+            player_list_str += '\n'
+        else:
+            player_list_str = ''
+
+        if server_info.forgeData is not None:
+            mod_list_str = "服务端模组列表:\n"
+            for mod in server_info.forgeData.mods:
+                mod_list_str += f"{html_space * 4}{mod.modId}{html_space}({mod.modmarker})\n"
+        else:
+            mod_list_str = ''
+
         message = "<span>"
+        message += f"服务器地址: {host}:{port}"
         message += f"服务端版本: {server_info.version.name}\n"
         message += f"服务器描述:\n{description_html}\n"
         message += f"在线玩家: {server_info.players.online}/{server_info.players.max}\n"
         message += player_list_str
-        message += f"服务器地址: {host, port}"
+        message += mod_list_str
+
         message += "</span>"
         message = message.replace("\n", "<br/>")
 
-        message = message.replace(
-            "<span style='color: rgb(255, 255, 255);'>",
-            "<span style='color: rgb(255, 255, 255); background-color: rgb(220, 220, 220);'>"
+        message = _html_add_background_color(
+            (255, 255, 255),
+            (220, 220, 220),
+            message,
+        )
+        message = _html_add_background_color(
+            (255, 255, 85),
+            (220, 220, 220),
+            message,
         )
 
         msg_box = QMessageBox()
         msg_box.setWindowTitle("服务器详情")
         msg_box.setText(message)
+        msg_box.setStandardButtons(QMessageBox.StandardButton.Close)
+
+        def _copy_server_address(*_):
+            clipboard = QApplication.clipboard()
+            clipboard.setText(f"{host}:{port}")
+
+        copy_button = QPushButton("复制地址")
+        # noinspection PyUnresolvedReferences
+        copy_button.clicked.connect(_copy_server_address)
+
+        msg_box.addButton(copy_button, QMessageBox.ButtonRole.ActionRole)
+
+        flags = self._parent.parent().windowFlags() & Qt.WindowStaysOnTopHint
+        is_top = flags == Qt.WindowStaysOnTopHint
+
+        msg_box.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, is_top)
 
         msg_box.exec()
 

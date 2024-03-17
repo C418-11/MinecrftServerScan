@@ -75,7 +75,7 @@ class PyToPyd:
             install_requires=self._dependency_versions(),
             author="C418____11",
             author_email="553515788@qq.com",
-            url="https://github.com/C418-11/ComputerStatusRecorder",
+            url="https://github.com/C418-11/MinecrftServerScan",
         )
 
     def make_all(self, dir_path, sub_path: str = ''):
