@@ -7,9 +7,7 @@ __version__ = "0.0.1Dev"
 import json
 import os
 import socket
-import sys
 import threading
-import warnings
 from typing import override
 
 from PyQt5.QtCore import Qt, QModelIndex, QSize
@@ -141,9 +139,20 @@ def _spawn_info_widget(server_info: ServerInfo, host: str, port: int):
     font_height = host_ip_label.fontMetrics().height()
     host_ip_label.setFixedHeight(font_height)
 
+    desc_label = QLabel()
+
+    desc_html = ColorString.from_string(server_info.description.to_string()).to_html()
+    desc_html = desc_html.replace(
+        "<span style='color: rgb(255, 255, 255);'>",
+        "<span style='color: rgb(255, 255, 255); background-color: rgb(220, 220, 220);'>"
+    )
+    desc_html = f"<span>{desc_html.replace('\n', "<br/>")}</span>"
+    desc_label.setText(desc_html)
+
     root_layout.addWidget(image_label)
     root_layout.addLayout(desc_layout)
     desc_layout.addWidget(host_ip_label)
+    desc_layout.addWidget(desc_label)
 
     return widget
 
@@ -286,8 +295,11 @@ class ServerScan(AbcUI):
             return
 
         def _emit():
-            # noinspection PyUnresolvedReferences
-            self.scan_button.log_signal.emit()
+            try:
+                # noinspection PyUnresolvedReferences
+                self.scan_button.log_signal.emit()
+            except RuntimeError:
+                pass
 
         self.last_log = threading.Timer(0.5, _emit)
         self.last_log.daemon = True
@@ -301,14 +313,8 @@ class ServerScan(AbcUI):
             path_str = ''.join([f"[{r}]" for r in _path])
             try:
                 self.show_log.addItem(f"{path_str}: {_msg}")
-            except RuntimeError as err:
-                if all([x in str(err) for x in ["C/C++", "object", "delete"]]):
-                    warnings.warn(
-                        "The program is suspected to be closed. Log output will be suspended",
-                        RuntimeWarning,
-                        stacklevel=2
-                    )
-                return
+            except RuntimeError:
+                pass
 
         self.log_cache.clear()
 
@@ -321,16 +327,12 @@ class ServerScan(AbcUI):
         _, host, port = item.data(Qt.UserRole)
 
         html_space = "&nbsp;"
-        gray = f"rgb({', '.join([str(160)] * 3)})"
-
-        def _span_gray(txt: str):
-            return f"<span style={f'"background-color: {gray};"'}>{txt}</span>"
 
         if server_info.players.sample is not None:
             player_list_str = "玩家列表:\n"
             player_list_str += '\n'.join(
                 [
-                    f"{html_space * 4}{_span_gray(player.name.to_html())}{html_space}({player.id})"
+                    f"{html_space * 4}{player.name.to_html()}{html_space}({player.id})"
                     for player in server_info.players.sample
                 ]
             )
@@ -341,7 +343,7 @@ class ServerScan(AbcUI):
         description = ColorString.from_string(server_info.description.to_string()).to_html()
         description_list = description.split('\n')
         description_html = '\n'.join(
-            [f"{html_space * 4}{_span_gray(line)}" for line in description_list]
+            [f"{html_space * 4}{line}" for line in description_list]
         )
 
         message = "<span>"
@@ -352,6 +354,11 @@ class ServerScan(AbcUI):
         message += f"服务器地址: {host, port}"
         message += "</span>"
         message = message.replace("\n", "<br/>")
+
+        message = message.replace(
+            "<span style='color: rgb(255, 255, 255);'>",
+            "<span style='color: rgb(255, 255, 255); background-color: rgb(220, 220, 220);'>"
+        )
 
         msg_box = QMessageBox()
         msg_box.setWindowTitle("服务器详情")

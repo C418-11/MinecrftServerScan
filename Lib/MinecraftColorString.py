@@ -299,6 +299,7 @@ class ColorString:
         elif parse_type == ParseType.Text:
             result = [_parse_text(json_dict)]
         else:
+            print(json_dict)
             raise ValueError("Unknown parse type")
 
         return cls(result)
