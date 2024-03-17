@@ -2,7 +2,7 @@
 # cython: language_level = 3
 
 __author__ = "C418____11 <553515788@qq.com>"
-__version__ = "0.0.7Dev"
+__version__ = "MSS-0.0.7Dev"
 
 import os
 import sys
@@ -16,6 +16,7 @@ from tqdm import tqdm
 import FeatureLoader
 from Lib.Configs import BASE_PATH
 from Lib.Configs import read_default_yaml
+from Lib.Configs import init as init_configs
 from Lib.StdColor import ColorWrite
 from UI import RegisterUI
 from UI.BaseWidgets import GetScale
@@ -30,6 +31,10 @@ _load_other_futures = read_default_yaml(
 
 
 def main():
+    app = QApplication(sys.argv)
+
+    init_configs()
+
     FeatureLoader.load_default_features()
 
     if _load_other_futures.get_default("Load", False) is True:
@@ -39,7 +44,6 @@ def main():
             print("An error occurred while loading another futures:", file=sys.stderr)
             traceback.print_exception(e)
 
-    app = QApplication(sys.argv)
     widget = GetScale()
     ui = UiMain(widget)
     ui.setupUi()
@@ -69,10 +73,10 @@ def main():
 
 if __name__ == "__main__":
     _green_write = ColorWrite(sys.stdout, colorama.Fore.LIGHTGREEN_EX)
-    print(f"Version: {__version__}", file=_green_write)
-    print(f"Author: {__author__}", file=_green_write)
-    print(f"版本号: {__version__}", file=_green_write)
-    print(f"作者: {__author__}", file=_green_write)
+    print(f"Core Version: {__version__}", file=_green_write)
+    print(f"Core Author: {__author__}", file=_green_write)
+    print(f"内核版本号: {__version__}", file=_green_write)
+    print(f"内核作者: {__author__}", file=_green_write)
     main()
 
 __all__ = ("main",)

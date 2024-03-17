@@ -25,18 +25,6 @@ def _make_packet(data: bytes) -> bytes:
     return struct.pack(">I", len(data)) + data
 
 
-def _analyze_varint(data) -> int:
-    result = 0
-    shift = 0
-    for raw_byte in data:
-        val_byte = raw_byte & 0x7F
-        result |= val_byte << shift
-        if raw_byte & 0x80 == 0:
-            break
-        shift += 7
-    return result
-
-
 class Scanner:
     protocol_version = 65
 
@@ -135,4 +123,4 @@ class Scanner:
         return _make_packet(data)
 
 
-__all__ = ("Scanner",)
+__all__ = ("Scanner", )

@@ -2,7 +2,7 @@
 # cython: language_level = 3
 
 __author__ = "C418____11 <553515788@qq.com>"
-__version__ = "0.0.3Bata"
+__version__ = "MSS-0.0.3Bata"
 
 import importlib
 import os.path
@@ -20,6 +20,7 @@ DefaultFeatures = read_default_yaml(
     {
         "1|WindowTop": True,  # 这里的 '|' 是为了读取后进行排序
         "2|Opacity": True,
+        "3|ScanServer": True,
     }
 )
 

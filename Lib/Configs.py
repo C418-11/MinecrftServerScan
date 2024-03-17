@@ -2,19 +2,20 @@
 # cython: language_level = 3
 
 __author__ = "C418____11 <553515788@qq.com>"
-__version__ = "0.0.2Alpha"
+__version__ = "MSS-0.0.2Alpha"
 
 import os
 from collections import OrderedDict
 
 import yaml
+from PyQt5.QtGui import QFontDatabase
 
 
 def read_default_yaml(path: str, default_config):
     if not os.path.exists(path):
-        with open(path, 'w') as f:
+        with open(path, 'w', encoding="utf-8") as f:
             yaml.safe_dump(default_config, f)
-    with open(path, 'r') as f:
+    with open(path, 'r', encoding="utf-8") as f:
         return Config(yaml.safe_load(f), file_path=path)
 
 
@@ -135,3 +136,10 @@ NormalFont = _font_size.get_default("Normal", 12)
 LargeFont = _font_size.get_default("Large", 14)
 HugeFont = _font_size.get_default("Huge", 16)
 TitleFont = _font_size.get_default("Title", 20)
+
+
+def init():
+    global FontFamily
+    if os.path.exists(os.path.normpath(FontFamily)):
+        _font_id = QFontDatabase.addApplicationFont(os.path.normpath(FontFamily))
+        FontFamily = QFontDatabase.applicationFontFamilies(_font_id)[0]

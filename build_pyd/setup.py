@@ -110,14 +110,12 @@ def _main():
     compiler = PyToPyd()
 
     def a():
-        compiler.make_all(r"D:\source_code\python\ComputerStatusRecorder\DefaultFeatures")
-        compiler.make_all(r"D:\source_code\python\ComputerStatusRecorder\Recorder")
-        compiler.make_all(r"D:\source_code\python\ComputerStatusRecorder\Monitor")
-        compiler.make_all(r"D:\source_code\python\ComputerStatusRecorder\Lib")
+        compiler.make_all(r"D:\source_code\python\MinecraftServerScan\DefaultFeatures")
+        compiler.make_all(r"D:\source_code\python\MinecraftServerScan\Lib")
         _rename_all(compiler.pyd_path, r".cp312-win_amd64", r"")
 
     def b():
-        compiler.make_all(r"D:\source_code\python\ComputerStatusRecorder\Features")
+        compiler.make_all(r"D:\source_code\python\MinecraftServerScan\Features")
         _rename_all(compiler.pyd_path, r".cp312-win_amd64", r"")
 
     if '1' in type_:
