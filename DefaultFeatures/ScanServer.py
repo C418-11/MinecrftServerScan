@@ -7,12 +7,13 @@ __version__ = "0.0.1Dev"
 import json
 import os
 import socket
+import sys
 import threading
 import warnings
 from typing import override
 
-from PyQt5.QtCore import Qt, QModelIndex
-from PyQt5.QtGui import QFont
+from PyQt5.QtCore import Qt, QModelIndex, QSize
+from PyQt5.QtGui import QFont, QPixmap
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import pyqtSignal
 
@@ -26,7 +27,7 @@ from UI.tools import showException
 from Lib.Configs import read_default_yaml, BASE_PATH, FontFamily, NormalFont
 from UI.RegisterUI import register
 
-from PyQt5.QtWidgets import QLineEdit, QProgressBar
+from PyQt5.QtWidgets import QLineEdit, QProgressBar, QHBoxLayout
 
 from enum import IntEnum
 
@@ -114,6 +115,39 @@ class CallbackPushButton(QPushButton):
         super().__init__(*args)
 
 
+def _spawn_info_widget(server_info: ServerInfo, host: str, port: int):
+    widget = QWidget()
+    root_layout = QHBoxLayout()
+    root_layout.setContentsMargins(0, 0, 0, 0)
+    widget.setLayout(root_layout)
+
+    pixmap = QPixmap("./DefaultServerIcon.png")
+
+    if server_info.favicon is not None:
+        image_bytes = server_info.favicon.to_bytes()
+        pixmap.loadFromData(image_bytes)
+
+    image_label = QLabel()
+    pixmap = pixmap.scaled(64, 64, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+    image_label.setPixmap(pixmap)
+    image_label.setFixedSize(QSize(64, 64))
+
+    desc_layout = QVBoxLayout()
+    desc_layout.setContentsMargins(0, 0, 0, 0)
+
+    host_ip_label = QLabel()
+    host_ip_label.setText(f"{host}:{port}")
+    host_ip_label.setAlignment(Qt.AlignCenter)
+    font_height = host_ip_label.fontMetrics().height()
+    host_ip_label.setFixedHeight(font_height)
+
+    root_layout.addWidget(image_label)
+    root_layout.addLayout(desc_layout)
+    desc_layout.addWidget(host_ip_label)
+
+    return widget
+
+
 class ServerScan(AbcUI):
     def __init__(self, _parent: QTabWidget):
         super().__init__(_parent)
@@ -141,6 +175,7 @@ class ServerScan(AbcUI):
 
         self.log_level = LogLevel.INFO
 
+    @showException
     def _callback(self, event):
         def _parse_thread_finish(e: ThreadFinishEvent):
             try:
@@ -150,12 +185,25 @@ class ServerScan(AbcUI):
                 return
 
             self._log([e.port], f"存在服务器", LogLevel.INFO)
-            self.result_ls.append(ServerInfo(parsed))
+
+            server_info = ServerInfo(parsed)
+            self.result_ls.append(server_info)
             self.result_count_label.setText(f"扫描结果: {len(self.result_ls)}")
-            self.show_result_list.addItem(f"{e.host}:{e.port}")
+
+            item = QListWidgetItem()
+            item.setData(Qt.UserRole, (server_info, e.host, e.port))
+
+            widget = _spawn_info_widget(server_info, e.host, e.port)
+
+            item.setSizeHint(QSize(0, 64))
+
+            self.show_result_list.addItem(item)
+            self.show_result_list.setItemWidget(item, widget)
 
         def _parse_thread_error(e: ThreadErrorEvent):
             if type(e.error) is TimeoutError:
+                return
+            if type(e.error) is socket.gaierror:
                 return
             self._log([e.port], f"意外的错误 {type(e.error).__name__}: {e.error}", LogLevel.ERROR)
 
@@ -219,9 +267,9 @@ class ServerScan(AbcUI):
             self.ports,
             _emit,
             socket_reader=_read_packet,
-            max_threads=128,
+            max_threads=256,
         )
-        self.scanner.connect_timeout = 1
+        self.scanner.connect_timeout = 0.9
         self.scanner.scan_timeout = 2
 
         self.scanner.start()
@@ -270,26 +318,46 @@ class ServerScan(AbcUI):
         index: QModelIndex
         server_info = self.result_ls[index.row()]
 
-        ansi_reset: str = "\u001b[0m"
+        _, host, port = item.data(Qt.UserRole)
+
+        html_space = "&nbsp;"
+        gray = f"rgb({', '.join([str(160)] * 3)})"
+
+        def _span_gray(txt: str):
+            return f"<span style={f'"background-color: {gray};"'}>{txt}</span>"
 
         if server_info.players.sample is not None:
             player_list_str = "玩家列表:\n"
             player_list_str += '\n'.join(
-                [f"    {player.name.to_ansi() + ansi_reset} ({player.id})" for player in server_info.players.sample]
+                [
+                    f"{html_space * 4}{_span_gray(player.name.to_html())}{html_space}({player.id})"
+                    for player in server_info.players.sample
+                ]
             )
             player_list_str += '\n'
         else:
             player_list_str = ''
 
-        description = ColorString.from_string(server_info.description.to_string())
+        description = ColorString.from_string(server_info.description.to_string()).to_html()
+        description_list = description.split('\n')
+        description_html = '\n'.join(
+            [f"{html_space * 4}{_span_gray(line)}" for line in description_list]
+        )
 
-        message = ''
+        message = "<span>"
         message += f"服务端版本: {server_info.version.name}\n"
-        message += f"服务器描述:\n    {description.to_ansi().replace('\n', '\n    ') + ansi_reset}\n"
+        message += f"服务器描述:\n{description_html}\n"
         message += f"在线玩家: {server_info.players.online}/{server_info.players.max}\n"
         message += player_list_str
-        message += f"服务器地址: {item.text()}\n"
-        print(message)
+        message += f"服务器地址: {host, port}"
+        message += "</span>"
+        message = message.replace("\n", "<br/>")
+
+        msg_box = QMessageBox()
+        msg_box.setWindowTitle("服务器详情")
+        msg_box.setText(message)
+
+        msg_box.exec()
 
     @override
     def setupUi(self):
@@ -322,7 +390,6 @@ class ServerScan(AbcUI):
 
         self.show_result_list = QListWidget(self.widget)
         self.show_result_list.setToolTip("扫描结果")
-        self.show_result_list.setStyleSheet("background-color: rgba(0, 255, 0, 64);")
         # noinspection PyUnresolvedReferences
         self.show_result_list.itemDoubleClicked.connect(self._showServerDetails)
 
