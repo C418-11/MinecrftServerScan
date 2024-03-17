@@ -8,7 +8,7 @@ import json
 import os
 import socket
 import threading
-from typing import override
+from typing import override, Callable
 
 from PyQt5.QtCore import Qt, QModelIndex, QSize
 from PyQt5.QtGui import QFont, QPixmap
@@ -128,7 +128,7 @@ def _html_add_background_color(
     )
 
 
-def _spawn_info_widget(server_info: ServerInfo, host: str, port: int):
+def _spawn_info_widget(server_info: ServerInfo, host: str, port: int, *, is_window_top: Callable[[], bool]):
     widget = QWidget()
     root_layout = QHBoxLayout()
     root_layout.setContentsMargins(0, 0, 0, 0)
@@ -203,6 +203,8 @@ def _spawn_info_widget(server_info: ServerInfo, host: str, port: int):
             player_html
         )
 
+        msg_box.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, is_window_top())
+
         msg_box.setText(player_html)
         msg_box.exec()
 
@@ -259,6 +261,10 @@ class ServerScan(AbcUI):
 
         self.log_level = LogLevel.INFO
 
+    def _is_window_top(self) -> bool:
+        flags = self.widget.window().windowFlags() & Qt.WindowType.WindowStaysOnTopHint
+        return flags == Qt.WindowType.WindowStaysOnTopHint
+
     @showException
     def _callback(self, event):
         def _parse_thread_finish(e: ThreadFinishEvent):
@@ -277,7 +283,7 @@ class ServerScan(AbcUI):
             item = QListWidgetItem()
             item.setData(Qt.UserRole, (server_info, e.host, e.port))
 
-            widget = _spawn_info_widget(server_info, e.host, e.port)
+            widget = _spawn_info_widget(server_info, e.host, e.port, is_window_top=self._is_window_top)
 
             item.setSizeHint(QSize(0, 64 + 15))
 
@@ -462,10 +468,7 @@ class ServerScan(AbcUI):
 
         msg_box.addButton(copy_button, QMessageBox.ButtonRole.ActionRole)
 
-        flags = self._parent.parent().windowFlags() & Qt.WindowStaysOnTopHint
-        is_top = flags == Qt.WindowStaysOnTopHint
-
-        msg_box.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, is_top)
+        msg_box.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, self._is_window_top())
 
         msg_box.exec()
 
