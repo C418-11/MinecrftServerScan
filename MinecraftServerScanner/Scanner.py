@@ -6,6 +6,8 @@ __version__ = "0.0.2Dev"
 
 import struct
 import threading
+import time
+import traceback
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 from typing import Callable
@@ -90,9 +92,13 @@ class Scanner:
         self._callback(ThreadFinishEvent(thread_id=thread_id, host=self._host, port=port, result=raw_data))
 
     def _wait_finish(self):
-        self._thread_pool.shutdown(wait=True, cancel_futures=False)
+        try:
+            self._thread_pool.shutdown(wait=True, cancel_futures=False)
 
-        self._callback(FinishEvent(host=self._host, port=self._port))
+            self._callback(FinishEvent(host=self._host, port=self._port))
+        except Exception as err:
+            traceback.print_exception(err)
+            time.sleep(10)
 
     def start(self) -> None:
         self._callback(StartEvent(self._host, self._port))

@@ -129,15 +129,68 @@ def _spawn_info_widget(server_info: ServerInfo, host: str, port: int):
     pixmap = pixmap.scaled(64, 64, Qt.KeepAspectRatio, Qt.SmoothTransformation)
     image_label.setPixmap(pixmap)
     image_label.setFixedSize(QSize(64, 64))
+    root_layout.addWidget(image_label)
 
     desc_layout = QVBoxLayout()
     desc_layout.setContentsMargins(0, 0, 0, 0)
+    root_layout.addLayout(desc_layout)
 
-    host_ip_label = QLabel()
-    host_ip_label.setText(f"{host}:{port}")
-    host_ip_label.setAlignment(Qt.AlignCenter)
-    font_height = host_ip_label.fontMetrics().height()
-    host_ip_label.setFixedHeight(font_height)
+    state_layout = QHBoxLayout()
+    state_layout.setContentsMargins(0, 0, 0, 0)
+    desc_layout.addLayout(state_layout)
+
+    version_label = QLabel()
+    version_label.setText(server_info.version.name)
+    version_label.setAlignment(Qt.AlignLeft)
+    state_layout.addWidget(version_label)
+
+    host_port_label = QLabel()
+    host_port_label.setText(f"{host}:{port}")
+    host_port_label.setAlignment(Qt.AlignCenter)
+    state_layout.addWidget(host_port_label)
+
+    player_layout = QHBoxLayout()
+    player_layout.setContentsMargins(0, 0, 0, 0)
+    state_layout.addLayout(player_layout)
+
+    player_label = QLabel()
+    player_label.setText(f"{server_info.players.online}/{server_info.players.max}")
+    player_label.setAlignment(Qt.AlignRight)
+    player_layout.addWidget(player_label)
+
+    @showException
+    def _show_player_list(*_):
+        msg_box = QMessageBox()
+        msg_box.setWindowTitle("玩家列表")
+
+        html_space = "&nbsp;"
+
+        player_html = "<span>"
+        player_html += (
+            f"<span>最大在线:{server_info.players.max}{html_space}"
+            f"当前在线:{server_info.players.online}</span><br/>"
+        )
+
+        player_html += "<span>玩家列表:</span><br/>"
+
+        if server_info.players.sample is not None:
+            for player in server_info.players.sample:
+                print(player.name, player.name.to_html())
+                player_html += f"{html_space*4}{player.name.to_html()}<br/>"
+        player_html += "</span>"
+        player_html.replace(
+            "<span style='color: rgb(255, 255, 255);'>",
+            "<span style='color: rgb(255, 255, 255); background-color: rgb(220, 220, 220);'>"
+        )
+
+        msg_box.setText(player_html)
+        msg_box.exec()
+
+    player_list_button = QPushButton()
+    player_list_button.setText("玩家列表")
+    # noinspection PyUnresolvedReferences
+    player_list_button.clicked.connect(_show_player_list)
+    player_layout.addWidget(player_list_button)
 
     desc_label = QLabel()
 
@@ -148,10 +201,6 @@ def _spawn_info_widget(server_info: ServerInfo, host: str, port: int):
     )
     desc_html = f"<span>{desc_html.replace('\n', "<br/>")}</span>"
     desc_label.setText(desc_html)
-
-    root_layout.addWidget(image_label)
-    root_layout.addLayout(desc_layout)
-    desc_layout.addWidget(host_ip_label)
     desc_layout.addWidget(desc_label)
 
     return widget
@@ -236,6 +285,7 @@ class ServerScan(AbcUI):
         def _parse_finish(e: FinishEvent):
             self._log([], f"扫描完成", LogLevel.INFO)
             self.result_count_label.setText(f"扫描结果: {len(self.result_ls)}")
+            self.progress_bar.setValue(self.progress_bar.maximum())
             self.progress_bar.setToolTip(f"扫描结束 共计扫描{len(e.port)}个端口")
             self.scan_button.setEnabled(True)
             self.ip_input.setEnabled(True)

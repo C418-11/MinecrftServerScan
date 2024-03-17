@@ -213,7 +213,7 @@ class UiMain:
             traceback.print_exception(e)
 
     def ReTranslateUi(self):
-        self.Widget.setWindowTitle(u"StatusRecorder")
+        self.Widget.setWindowTitle(u"MC服务器扫描工具")
         self.ExitButton.setText(u"Exit")
         self.MinButton.setText(u"Min")
 

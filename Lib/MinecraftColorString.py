@@ -263,6 +263,9 @@ class ColorString:
         elif "translate" in json_dict:
             parse_type = ParseType.Text
             json_dict["text"] = json_dict["translate"]
+        elif type(json_dict) is str:
+            parse_type = ParseType.Text
+            json_dict = {"text": json_dict}
 
         def _parse_extra(data) -> list[ColorData]:
             rets = []
@@ -357,18 +360,3 @@ class ColorString:
 
     def __str__(self):
         return str(self._raw_data)
-
-
-def main():
-    string = "§6§l欢迎加入 §a§oOrdinary Server§r  §b服务器群号: §3906649869\n§6§l大厅"
-    cs = ColorString.from_string(string)
-
-    # string_dict = {'extra': [{'bold': True, 'italic': False, 'underlined': False, 'strikethrough': False, 'obfuscated': False, 'color': '#F51DF5', 'text': '启'}, {'bold': True, 'italic': False, 'underlined': False, 'strikethrough': False, 'obfuscated': False, 'color': '#F735CC', 'text': '动'}, {'bold': True, 'italic': False, 'underlined': False, 'strikethrough': False, 'obfuscated': False, 'color': '#F84CA3', 'text': '是'}, {'bold': True, 'italic': False, 'underlined': False, 'strikethrough': False, 'obfuscated': False, 'color': '#FA637B', 'text': '你'}, {'bold': True, 'italic': False, 'underlined': False, 'strikethrough': False, 'obfuscated': False, 'color': '#FC7B52', 'text': '的'}, {'bold': True, 'italic': False, 'underlined': False, 'strikethrough': False, 'obfuscated': False, 'color': '#FD9329', 'text': '谎'}, {'bold': True, 'italic': False, 'underlined': False, 'strikethrough': False, 'obfuscated': False, 'color': '#FFAA00', 'text': '言'}], 'text': ''}
-    # cs = ColorString.from_dict(string_dict)
-    print(cs.raw_data)
-    print(cs.to_ansi(), CtrlName_To_ANSI["reset"])
-    print(cs.to_string())
-
-
-if __name__ == '__main__':
-    main()
