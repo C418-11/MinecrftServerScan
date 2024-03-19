@@ -17,6 +17,7 @@ from UI.RegisterUI import register_menu
 from UI.tools import showException
 
 
+@register_menu
 class WindowTop(AbcMenu):
     def __init__(self, _menubar: QMenuBar, _window: QWidget):
         super().__init__(_menubar, _window)
@@ -48,6 +49,3 @@ class WindowTop(AbcMenu):
     @override
     def priority():
         return float("-inf")
-
-
-register_menu(WindowTop)

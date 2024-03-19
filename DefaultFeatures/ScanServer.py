@@ -234,6 +234,7 @@ def _spawn_info_widget(server_info: ServerInfo, host: str, port: int, *, is_wind
     return widget
 
 
+@register
 class ServerScan(AbcUI):
     def __init__(self, _parent: QTabWidget):
         super().__init__(_parent)
@@ -558,6 +559,3 @@ class ServerScan(AbcUI):
     @override
     def getTagName(self):
         return "服务器扫描"
-
-
-register(ServerScan)

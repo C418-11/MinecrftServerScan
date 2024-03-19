@@ -17,6 +17,7 @@ from UI.RegisterUI import register_menu
 from UI.tools import showException
 
 
+@register_menu
 class OpacityMenu(AbcMenu):
     def __init__(self, _menubar, _window):
         super().__init__(_menubar, _window)
@@ -66,6 +67,3 @@ class OpacityMenu(AbcMenu):
     @override
     def priority():
         return -1
-
-
-register_menu(OpacityMenu)

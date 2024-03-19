@@ -71,14 +71,22 @@ widgets: OrderSet = OrderSet()
 
 
 def register(widget: type[AbcUI]):
+    """
+    Can be used as a decorator or a function call.
+    """
     widgets.add(widget)
+    return widget
 
 
 menu: OrderSet = OrderSet()
 
 
 def register_menu(menu_item: type[AbcMenu]):
+    """
+    Can be used as a decorator or a function call.
+    """
     menu.add(menu_item)
+    return menu_item
 
 
 __all__ = ("widgets", "register", "menu", "register_menu",)
