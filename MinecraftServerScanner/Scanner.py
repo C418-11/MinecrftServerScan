@@ -2,7 +2,7 @@
 # cython: language_level = 3
 
 __author__ = "C418____11 <553515788@qq.com>"
-__version__ = "0.0.2Dev"
+__version__ = "0.0.3Dev"
 
 import struct
 import threading
@@ -59,10 +59,15 @@ class Scanner:
         self._port = port
         self._callback = callback
 
+        self.finished_ports: set[int] = set()
+        self.error_ports: set[int] = set()
+        self.update_ports_lock = threading.Lock()
+
         self._socket_reader = socket_reader
 
         self._max_threads = max_threads
 
+        self._wait_finish_thread: threading.Thread | None = None
         self._thread_pool: ThreadPoolExecutor | None = None
 
         self.connect_timeout = 0.1
@@ -74,6 +79,8 @@ class Scanner:
                 self._scan(port, thread_id)
             except Exception as err:
                 self._callback(ThreadErrorEvent(thread_id=thread_id, host=self._host, port=port, error=err))
+                with self.update_ports_lock:
+                    self.error_ports.add(port)
 
         func_timeout(
             self.scan_timeout,
@@ -90,12 +97,19 @@ class Scanner:
         raw_data = self._socket_reader(client)
 
         self._callback(ThreadFinishEvent(thread_id=thread_id, host=self._host, port=port, result=raw_data))
+        with self.update_ports_lock:
+            self.finished_ports.add(port)
 
     def _wait_finish(self):
         try:
             self._thread_pool.shutdown(wait=True, cancel_futures=False)
 
-            self._callback(FinishEvent(host=self._host, port=self._port))
+            self._callback(FinishEvent(
+                host=self._host,
+                all_ports=self._port,
+                finished_ports=self.finished_ports,
+                error_ports=self.error_ports
+            ))
         except Exception as err:
             traceback.print_exception(err)
             time.sleep(10)
@@ -109,13 +123,18 @@ class Scanner:
             thread_id = uuid.uuid4().hex
             self._thread_pool.submit(self._wrapper, *(port, thread_id))
 
-        threading.Thread(target=self._wait_finish, daemon=True).start()
+        self._wait_finish_thread = threading.Thread(target=self._wait_finish, daemon=True)
+        self._wait_finish_thread.start()
 
     def join(self) -> None:
         self._thread_pool.shutdown(wait=True)
+        self._wait_finish_thread.join()
 
     def stop(self, wait: bool = True, cancel_futures: bool = True):
         self._thread_pool.shutdown(wait=wait, cancel_futures=cancel_futures)
+
+    def is_alive(self) -> bool:
+        return self._wait_finish_thread.is_alive()
 
     def _make_handshake_packet(self, port: int) -> bytes:
         data = (
