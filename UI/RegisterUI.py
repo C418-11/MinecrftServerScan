@@ -5,8 +5,6 @@
 __author__ = "C418____11 <553515788@qq.com>"
 __version__ = "0.0.2Dev"
 
-from typing import Self
-
 from Lib.OrderSet import OrderSet
 from UI.ABC import AbcMenu
 from UI.ABC import AbcUI

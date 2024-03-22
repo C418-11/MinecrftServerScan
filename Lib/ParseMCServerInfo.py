@@ -7,9 +7,10 @@ __version__ = "0.0.1Dev"
 import base64
 import io
 from abc import ABC
-from Lib.MinecraftColorString import ColorString
 
 from PIL import Image
+
+from Lib.MinecraftColorString import ColorString
 
 
 class ForInRepr(ABC):

@@ -4,7 +4,6 @@
 __author__ = "C418____11 <553515788@qq.com>"
 __version__ = "0.0.3Dev"
 
-
 from abc import ABC
 from typing import Any
 

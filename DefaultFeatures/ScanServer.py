@@ -8,26 +8,54 @@ import json
 import os
 import socket
 import threading
-from typing import override, Callable
+from typing import Callable
+from typing import override
 
 from PIL import Image
-from PyQt5.QtCore import Qt, QModelIndex, QSize
-from PyQt5.QtGui import QFont, QPixmap
-from PyQt5.QtWidgets import *
+from PyQt5.QtCore import QModelIndex
+from PyQt5.QtCore import QSize
+from PyQt5.QtCore import Qt
 from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QPixmap
+from PyQt5.QtWidgets import QApplication
+from PyQt5.QtWidgets import QCheckBox
+from PyQt5.QtWidgets import QComboBox
+from PyQt5.QtWidgets import QDoubleSpinBox
+from PyQt5.QtWidgets import QFileDialog
+from PyQt5.QtWidgets import QHBoxLayout
+from PyQt5.QtWidgets import QLabel
+from PyQt5.QtWidgets import QLineEdit
+from PyQt5.QtWidgets import QListWidget
+from PyQt5.QtWidgets import QListWidgetItem
+from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtWidgets import QProgressBar
+from PyQt5.QtWidgets import QPushButton
+from PyQt5.QtWidgets import QScrollArea
+from PyQt5.QtWidgets import QSpinBox
+from PyQt5.QtWidgets import QTabWidget
+from PyQt5.QtWidgets import QVBoxLayout
+from PyQt5.QtWidgets import QWidget
 
+from Lib.Configs import BASE_PATH
+from Lib.Configs import FontFamily
+from Lib.Configs import NormalFont
+from Lib.Configs import read_default_yaml
 from Lib.MinecraftColorString import ColorString
 from Lib.ParseMCServerInfo import ServerInfo
-from MinecraftServerScanner.Events import ThreadFinishEvent, ThreadErrorEvent, FinishEvent, StartEvent, \
-    ThreadStartEvent, ABCEvent
+from MinecraftServerScanner.Events import ABCEvent
+from MinecraftServerScanner.Events import FinishEvent
+from MinecraftServerScanner.Events import StartEvent
+from MinecraftServerScanner.Events import ThreadErrorEvent
+from MinecraftServerScanner.Events import ThreadFinishEvent
+from MinecraftServerScanner.Events import ThreadStartEvent
 from MinecraftServerScanner.Scanner import Scanner
 from UI.ABC import AbcUI
-from UI.tools import showException
-from Lib.Configs import read_default_yaml, BASE_PATH, FontFamily, NormalFont
+from UI.LogList import LogLevel
+from UI.LogList import LogListWidget
+from UI.LogList import NonUsable
 from UI.RegisterUI import register
-from UI.LogList import LogLevel, LogListWidget, NonUsable
-
-from PyQt5.QtWidgets import QLineEdit, QProgressBar, QHBoxLayout, QApplication, QSpinBox
+from UI.tools import showException
 
 # noinspection SpellCheckingInspection
 _load_scan_server = read_default_yaml(
@@ -35,34 +63,34 @@ _load_scan_server = read_default_yaml(
     {
         "DefaultTarget": [
             "127.0.0.1",
-            "s2.wemc.cc",
-            "cl-sde-bgp-1.openfrp.top",
-            "cn-bj-bgp-2.openfrp.top",
-            "cn-bj-bgp-4.openfrp.top",
-            "cn-bj-plc-1.openfrp.top",
-            "cn-bj-plc-2.openfrp.top",
-            "cn-cq-plc-1.openfrp.top",
-            "cn-fz-plc-1.openfrp.top",
-            "cn-he-plc-1.openfrp.top",
-            "cn-he-plc-2.openfrp.top",
-            "cn-hk-bgp-4.openfrp.top",
-            "cn-hk-bgp-5.openfrp.top",
-            "cn-hk-bgp-6.openfrp.top",
-            "cn-hz-bgp-1.openfrp.top",
-            "cn-nd-plc-1.openfrp.top",
-            "cn-qz-plc-1.openfrp.top",
-            "cn-sc-plc-2.openfrp.top",
-            "cn-sy-dx-2.openfrp.top",
-            "cn-sz-bgp-1.openfrp.top",
-            "cn-sz-plc-1.openfrp.top",
-            "cn-wh-plc-1.openfrp.top",
-            "cn-yw-plc-1.openfrp.top",
-            "jp-osk-bgp-1.openfrp.top",
-            "kr-nc-bgp-1.openfrp.top",
-            "kr-se-cncn-1.openfrp.top",
-            "ru-mow-bgp-1.openfrp.top",
-            "us-sjc-bgp-1.openfrp.top",
-            "us-sjc-bgp-2.openfrp.top"
+            # "s2.wemc.cc",
+            # "cl-sde-bgp-1.openfrp.top",
+            # "cn-bj-bgp-2.openfrp.top",
+            # "cn-bj-bgp-4.openfrp.top",
+            # "cn-bj-plc-1.openfrp.top",
+            # "cn-bj-plc-2.openfrp.top",
+            # "cn-cq-plc-1.openfrp.top",
+            # "cn-fz-plc-1.openfrp.top",
+            # "cn-he-plc-1.openfrp.top",
+            # "cn-he-plc-2.openfrp.top",
+            # "cn-hk-bgp-4.openfrp.top",
+            # "cn-hk-bgp-5.openfrp.top",
+            # "cn-hk-bgp-6.openfrp.top",
+            # "cn-hz-bgp-1.openfrp.top",
+            # "cn-nd-plc-1.openfrp.top",
+            # "cn-qz-plc-1.openfrp.top",
+            # "cn-sc-plc-2.openfrp.top",
+            # "cn-sy-dx-2.openfrp.top",
+            # "cn-sz-bgp-1.openfrp.top",
+            # "cn-sz-plc-1.openfrp.top",
+            # "cn-wh-plc-1.openfrp.top",
+            # "cn-yw-plc-1.openfrp.top",
+            # "jp-osk-bgp-1.openfrp.top",
+            # "kr-nc-bgp-1.openfrp.top",
+            # "kr-se-cncn-1.openfrp.top",
+            # "ru-mow-bgp-1.openfrp.top",
+            # "us-sjc-bgp-1.openfrp.top",
+            # "us-sjc-bgp-2.openfrp.top"
         ]
     })
 
@@ -224,7 +252,7 @@ def _spawn_info_widget(server_info: ServerInfo, host: str, port: int, *, is_wind
         (220, 220, 220),
         desc_html
     )
-    desc_html = f"<span>{desc_html.replace('\n', "<br/>")}</span>"
+    desc_html = "<span>" + desc_html.replace('\n', "<br/>") + "</span>"
     desc_label.setText(desc_html)
     desc_layout.addWidget(desc_label)
 

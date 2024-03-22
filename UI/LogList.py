@@ -5,11 +5,11 @@ __author__ = "C418____11 <553515788@qq.com>"
 __version__ = "0.0.1Dev"
 
 import threading
+from enum import StrEnum
 from typing import override
 
-from PyQt5.QtWidgets import QListWidget
 from PyQt5.QtCore import pyqtSignal
-from enum import StrEnum
+from PyQt5.QtWidgets import QListWidget
 
 from UI.tools import showException
 
@@ -150,4 +150,4 @@ class LogListWidget(QListWidget):
         self.log(root, txt, LogLevel.CRITICAL)
 
 
-__all__ = ("LogLevel", "LogListWidget", "NonUsable", )
+__all__ = ("LogLevel", "LogListWidget", "NonUsable",)

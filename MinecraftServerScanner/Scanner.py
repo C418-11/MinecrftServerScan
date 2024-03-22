@@ -4,23 +4,24 @@
 __author__ = "C418____11 <553515788@qq.com>"
 __version__ = "0.0.4Dev"
 
+import socket
 import struct
 import threading
 import time
 import traceback
 import uuid
 from concurrent.futures import ThreadPoolExecutor
-from typing import Callable
 from typing import Any
+from typing import Callable
+
 from func_timeout import func_timeout
 
-import socket
 from .Events import ABCEvent
-from .Events import StartEvent
 from .Events import FinishEvent
-from .Events import ThreadStartEvent
-from .Events import ThreadFinishEvent
+from .Events import StartEvent
 from .Events import ThreadErrorEvent
+from .Events import ThreadFinishEvent
+from .Events import ThreadStartEvent
 
 
 def _make_packet(data: bytes) -> bytes:
@@ -154,4 +155,4 @@ class Scanner:
         return _make_packet(data)
 
 
-__all__ = ("Scanner", )
+__all__ = ("Scanner",)

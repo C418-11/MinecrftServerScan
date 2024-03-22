@@ -15,8 +15,8 @@ from tqdm import tqdm
 
 import FeatureLoader
 from Lib.Configs import BASE_PATH
-from Lib.Configs import read_default_yaml
 from Lib.Configs import init as init_configs
+from Lib.Configs import read_default_yaml
 from Lib.StdColor import ColorWrite
 from UI import RegisterUI
 from UI.BaseWidgets import GetScale
