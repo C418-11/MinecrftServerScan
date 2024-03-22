@@ -10,6 +10,7 @@ import socket
 import threading
 from typing import override, Callable
 
+from PIL import Image
 from PyQt5.QtCore import Qt, QModelIndex, QSize
 from PyQt5.QtGui import QFont, QPixmap
 from PyQt5.QtWidgets import *
@@ -461,6 +462,7 @@ class ServerScan(AbcUI):
         msg_box.setText(message)
         msg_box.setStandardButtons(QMessageBox.StandardButton.Close)
 
+        @showException
         def _copy_server_address(*_):
             clipboard = QApplication.clipboard()
             clipboard.setText(f"{host}:{port}")
@@ -470,6 +472,29 @@ class ServerScan(AbcUI):
         copy_button.clicked.connect(_copy_server_address)
 
         msg_box.addButton(copy_button, QMessageBox.ButtonRole.ActionRole)
+
+        @showException
+        def _save_server_favicon(*_):
+            image: Image.Image = server_info.favicon.to_image()
+            base_filename = f"{host}[{port}].png"
+            filename = QFileDialog.getSaveFileName(
+                None,
+                "保存图标",
+                base_filename,
+                "PNG图片 (*.png);;JPG图片 (*.jpg)"
+
+            )[0]
+
+            if not filename:
+                return
+
+            image.save(filename)
+
+        save_button = QPushButton("保存图标")
+        # noinspection PyUnresolvedReferences
+        save_button.clicked.connect(_save_server_favicon)
+
+        msg_box.addButton(save_button, QMessageBox.ButtonRole.ActionRole)
 
         msg_box.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, self._is_window_top())
 
