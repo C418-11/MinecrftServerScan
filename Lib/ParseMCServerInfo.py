@@ -8,8 +8,6 @@ import base64
 import io
 from abc import ABC
 
-from PIL import Image
-
 from Lib.MinecraftColorString import ColorString
 
 
@@ -25,7 +23,8 @@ class ForInRepr(ABC):
 
             attrs.append(f"   {attr}={value_str}")
 
-        return f"<{type(self).__name__} (\n{", \n".join(attrs)}\n)>"
+        joined_attr = ", \n".join(attrs)
+        return f"<{type(self).__name__} (\n{joined_attr}\n)>"
 
 
 class Players(ForInRepr):
@@ -138,7 +137,8 @@ class Favicon:
         with open(path, "wb") as f:
             f.write(self.to_bytes())
 
-    def to_image(self) -> Image.Image:
+    def to_image(self):
+        from PIL import Image
         return Image.open(io.BytesIO(self.to_bytes()))
 
     def __repr__(self):

@@ -23,6 +23,8 @@ def showException(func):
             return func(*args, **kwargs)
         except Exception as err:
             traceback.print_exception(err)
+            if type(err) is KeyboardInterrupt:
+                raise
 
     return wrapper
 

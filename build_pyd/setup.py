@@ -7,6 +7,8 @@ __version__ = "0.0.1Dev"
 import os
 import re
 import subprocess
+import traceback
+import shutil
 from typing import Union
 
 from Cython.Build import cythonize
@@ -78,17 +80,24 @@ class PyToPyd:
             url="https://github.com/C418-11/MinecrftServerScan",
         )
 
-    def make_all(self, dir_path, sub_path: str = ''):
+    def make_all(self, dir_path, sub_path: str = '', use_root: bool = False, ignore_err: bool = False):
         root_dir = os.path.dirname(dir_path)
 
         for path in _get_all_extension_files(dir_path):
 
-            if os.path.relpath(path, root_dir).lower().startswith("lib"):
+            if not use_root:
                 to_path = sub_path
             else:
                 to_path = sub_path + str(os.path.relpath(os.path.dirname(path), root_dir))
+                os.makedirs(_make_path(self.pyd_path, to_path), exist_ok=True)
 
-            self.make(path, sub_path=to_path)
+            try:
+                self.make(path, sub_path=to_path)
+            except Exception as err:
+                if ignore_err:
+                    traceback.print_exception(err)
+                else:
+                    raise
 
 
 def _rename_file(file_name, replace, to):
@@ -110,10 +119,21 @@ def _main():
     compiler = PyToPyd()
 
     def a():
-        compiler.make_all(r"D:\source_code\python\MinecraftServerScan\DefaultFeatures")
+        compiler.make_all(r"D:\source_code\python\MinecraftServerScan\DefaultFeatures", use_root=True)
         compiler.make_all(r"D:\source_code\python\MinecraftServerScan\Lib")
         compiler.make_all(r"D:\source_code\python\MinecraftServerScan\UI")
         compiler.make_all(r"D:\source_code\python\MinecraftServerScan\MinecraftServerScanner")
+
+        compiler.make(r"C:\Users\C418____11\AppData\Local\Programs\Python\Python312\Lib\uuid.py")
+        compiler.make(r"C:\Users\C418____11\AppData\Local\Programs\Python\Python312\Lib\__future__.py")
+        compiler.make_all(r"C:\Users\C418____11\AppData\Local\Programs\Python\Python312\Lib\concurrent\futures")
+        compiler.make_all(r"D:\source_code\python\MinecraftServerScan\.venv312\Lib\site-packages\func_timeout")
+        compiler.make_all(r"C:\Users\C418____11\AppData\Local\Programs\Python\Python312\Lib\json")
+        shutil.copytree(
+            r"C:\Users\C418____11\AppData\Local\Programs\Python\Python312\Lib\site-packages\PIL",
+            os.path.join(compiler.pyd_path, "PIL"),
+            dirs_exist_ok=True
+        )
         _rename_all(compiler.pyd_path, r".cp312-win_amd64", r"")
 
     def b():

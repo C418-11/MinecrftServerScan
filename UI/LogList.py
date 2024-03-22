@@ -31,7 +31,7 @@ NonUsable = {LogLevel.NEVER, LogLevel.ALWAYS}
 class LogListWidget(QListWidget):
     update_log_signal = pyqtSignal(name="update_log")
 
-    def __init__(self, parent=None, log_batch_processing_delay: int = 0.5):
+    def __init__(self, parent=None, log_batch_processing_delay: float = 0.5):
         super().__init__(parent)
         self._enable_log_levels: set[LogLevel] = {LogLevel(x) for x in LogLevel} - {LogLevel.NEVER}
 
