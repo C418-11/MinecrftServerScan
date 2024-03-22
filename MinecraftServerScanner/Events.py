@@ -2,7 +2,7 @@
 # cython: language_level = 3
 
 __author__ = "C418____11 <553515788@qq.com>"
-__version__ = "0.0.2Dev"
+__version__ = "0.0.3Dev"
 
 
 from abc import ABC
@@ -31,11 +31,19 @@ class StartEvent(ABCEvent):
 
 
 class FinishEvent(ABCEvent):
-    def __init__(self, host: str, all_ports: set[int], finished_ports: set[int], error_ports:set[int]):
+    def __init__(
+            self,
+            host: str,
+            all_ports: set[int],
+            finished_ports: set[int],
+            error_ports: set[int],
+            used_time_ns: int
+    ):
         self.host = host
         self.all_ports = all_ports
         self.finished_ports = finished_ports
         self.error_ports = error_ports
+        self.used_time_ns = used_time_ns
 
 
 class ThreadErrorEvent(ABCEvent):

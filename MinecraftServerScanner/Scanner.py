@@ -2,7 +2,7 @@
 # cython: language_level = 3
 
 __author__ = "C418____11 <553515788@qq.com>"
-__version__ = "0.0.3Dev"
+__version__ = "0.0.4Dev"
 
 import struct
 import threading
@@ -70,6 +70,9 @@ class Scanner:
         self._wait_finish_thread: threading.Thread | None = None
         self._thread_pool: ThreadPoolExecutor | None = None
 
+        self.start_timestamp_ns: int | None = None
+        self.end_timestamp_ns: int | None = None
+
         self.connect_timeout = 0.1
         self.scan_timeout = 1
 
@@ -103,18 +106,21 @@ class Scanner:
     def _wait_finish(self):
         try:
             self._thread_pool.shutdown(wait=True, cancel_futures=False)
+            self.end_timestamp_ns = time.time_ns()
 
             self._callback(FinishEvent(
                 host=self._host,
                 all_ports=self._port,
                 finished_ports=self.finished_ports,
-                error_ports=self.error_ports
+                error_ports=self.error_ports,
+                used_time_ns=self.end_timestamp_ns - self.start_timestamp_ns,
             ))
         except Exception as err:
             traceback.print_exception(err)
             time.sleep(10)
 
     def start(self) -> None:
+        self.start_timestamp_ns = time.time_ns()
         self._callback(StartEvent(self._host, self._port))
 
         self._thread_pool = ThreadPoolExecutor(max_workers=self._max_threads)

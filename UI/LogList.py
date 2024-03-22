@@ -59,6 +59,12 @@ class LogListWidget(QListWidget):
         """
         self._enable_log_levels.difference_update(args)
 
+    def setAutoScroll(self, enable: bool):
+        """
+        非原生实现 推荐直接更改属性enable_auto_scroll
+        """
+        self.enable_auto_scroll = enable
+
     @property
     def enable_log_levels(self) -> set[LogLevel]:
         return self._enable_log_levels.copy()

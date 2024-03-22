@@ -267,6 +267,8 @@ class ServerScan(AbcUI):
         self.scan_parse_timeout_input: QDoubleSpinBox | None = None
 
         self.stop_scan_btn: QPushButton | None = None
+        self.clean_log_btn: QPushButton | None = None
+        self.auto_scroll_check_box: QCheckBox | None = None
 
         self.scan_connect_timeout = 0.9
         self.scan_parse_timeout = 1
@@ -335,6 +337,7 @@ class ServerScan(AbcUI):
             message += f"共计{len(e.all_ports)}个端口\n"
             message += f"成功完成{len(e.finished_ports)}个端口\n"
             message += f"在{len(e.error_ports)}个端口上发生错误\n"
+            message += f"总计用时{e.used_time_ns / 1000000000:.2f}秒"
             self._log([], message, LogLevel.INFO)
             self.result_count_label.setText(f"扫描结果: {len(self.result_ls)}")
             self.progress_bar.setValue(self.progress_bar.maximum())
@@ -375,7 +378,7 @@ class ServerScan(AbcUI):
 
         self.scanner = Scanner(
             self.ip_input.currentText(),
-            set(range(self.start_port, self.end_port)),
+            set(range(self.start_port, self.end_port + 1)),
             _emit,
             socket_reader=_read_packet,
             max_threads=256,
@@ -532,6 +535,11 @@ class ServerScan(AbcUI):
         self.show_log.clear()
         self.show_log.logAlways([], "MSS(Minecraft Server Scanner)测试版\nMade By: C418____11\n")
 
+    @showException
+    def _auto_scroll_type_changed(self, state):
+        is_enable = bool(state)
+        self.show_log.enable_auto_scroll = is_enable
+
     @override
     def setupUi(self):
         self.widget = QWidget(self._parent)
@@ -605,7 +613,7 @@ class ServerScan(AbcUI):
         self.port_input_tip.setAlignment(Qt.AlignCenter)
 
         self.start_port_input = QSpinBox(self.advanced_settings_widget)
-        self.start_port_input.setToolTip("开始端口")
+        self.start_port_input.setToolTip("*起始* 端口")
         self.start_port_input.setAlignment(Qt.AlignCenter)
         self.start_port_input.setMinimum(1)
         self.start_port_input.setMaximum(65535)
@@ -615,7 +623,7 @@ class ServerScan(AbcUI):
         self.start_port_input.valueChanged.connect(self._on_start_port_changed)
 
         self.end_port_input = QSpinBox(self.advanced_settings_widget)
-        self.end_port_input.setToolTip("结束端口")
+        self.end_port_input.setToolTip("*结束* 端口")
         self.end_port_input.setAlignment(Qt.AlignCenter)
         self.end_port_input.setMinimum(1)
         self.end_port_input.setMaximum(65535)
@@ -628,7 +636,7 @@ class ServerScan(AbcUI):
         self.scan_timeout_tip.setAlignment(Qt.AlignCenter)
 
         self.scan_connect_timeout_input = QDoubleSpinBox(self.advanced_settings_widget)
-        self.scan_connect_timeout_input.setToolTip("扫描连接超时时限")
+        self.scan_connect_timeout_input.setToolTip("扫描 *连接* 超时时限")
         self.scan_connect_timeout_input.setAlignment(Qt.AlignCenter)
         self.scan_connect_timeout_input.setDecimals(1)
         self.scan_connect_timeout_input.setMinimum(0.1)
@@ -640,7 +648,7 @@ class ServerScan(AbcUI):
         self.scan_connect_timeout_input.valueChanged.connect(self._on_scan_connect_timeout_changed)
 
         self.scan_parse_timeout_input = QDoubleSpinBox(self.advanced_settings_widget)
-        self.scan_parse_timeout_input.setToolTip("扫描解析超时时限")
+        self.scan_parse_timeout_input.setToolTip("扫描 *解析* 超时时限")
         self.scan_parse_timeout_input.setAlignment(Qt.AlignCenter)
         self.scan_parse_timeout_input.setDecimals(1)
         self.scan_parse_timeout_input.setMinimum(0.1)
@@ -658,9 +666,16 @@ class ServerScan(AbcUI):
         self.stop_scan_btn.clicked.connect(self._stop_scan)
 
         self.clean_log_btn = QPushButton("清空日志", self.advanced_settings_widget)
-        self.clean_log_btn.setToolTip("清空日志")
+        self.clean_log_btn.setToolTip("清空现存日志")
         # noinspection PyUnresolvedReferences
         self.clean_log_btn.clicked.connect(self._on_clear_btn)
+
+        # 日志自动滚动切换按钮
+        self.auto_scroll_check_box = QCheckBox("日志自动滚动", self.advanced_settings_widget)
+        self.auto_scroll_check_box.setToolTip("切换日志自动滚动")
+        # noinspection PyUnresolvedReferences
+        self.auto_scroll_check_box.stateChanged.connect(self._auto_scroll_type_changed)
+        self.auto_scroll_check_box.setChecked(True)
 
     @override
     @showException
@@ -709,6 +724,16 @@ class ServerScan(AbcUI):
 
         self.advanced_settings_widget.move(0, self.show_advanced_settings.y())
         self.advanced_settings_widget.resize(self.widget.size())
+
+        self.auto_scroll_check_box.resize(
+            120,
+            30
+        )
+        self.auto_scroll_check_box.move(
+            self.advanced_settings_widget.width() - self.auto_scroll_check_box.width() -
+            self.scroll_area.verticalScrollBar().width() - 3,
+            0
+        )
 
         self.log_level_tip.move(0, int(37 * y_scale))
         self.log_level_tip.resize(int(200 * x_scale), int(20 * y_scale))
