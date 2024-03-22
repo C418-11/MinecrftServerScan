@@ -112,6 +112,8 @@ def _main():
     def a():
         compiler.make_all(r"D:\source_code\python\MinecraftServerScan\DefaultFeatures")
         compiler.make_all(r"D:\source_code\python\MinecraftServerScan\Lib")
+        compiler.make_all(r"D:\source_code\python\MinecraftServerScan\UI")
+        compiler.make_all(r"D:\source_code\python\MinecraftServerScan\MinecraftServerScanner")
         _rename_all(compiler.pyd_path, r".cp312-win_amd64", r"")
 
     def b():
