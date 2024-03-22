@@ -527,6 +527,11 @@ class ServerScan(AbcUI):
         dec_len = self.scan_parse_timeout_input.decimals()
         self.scan_parse_timeout = round(new_value, dec_len)
 
+    @showException
+    def _on_clear_btn(self, *_):
+        self.show_log.clear()
+        self.show_log.logAlways([], "MSS(Minecraft Server Scanner)测试版\nMade By: C418____11\n")
+
     @override
     def setupUi(self):
         self.widget = QWidget(self._parent)
@@ -652,6 +657,11 @@ class ServerScan(AbcUI):
         # noinspection PyUnresolvedReferences
         self.stop_scan_btn.clicked.connect(self._stop_scan)
 
+        self.clean_log_btn = QPushButton("清空日志", self.advanced_settings_widget)
+        self.clean_log_btn.setToolTip("清空日志")
+        # noinspection PyUnresolvedReferences
+        self.clean_log_btn.clicked.connect(self._on_clear_btn)
+
     @override
     @showException
     def ReScale(self, x_scale: float, y_scale: float):
@@ -744,6 +754,11 @@ class ServerScan(AbcUI):
             self.port_input_tip.y()
         )
         self.stop_scan_btn.resize(int(200 * x_scale), int(30 * y_scale))
+        self.clean_log_btn.move(
+            self.stop_scan_btn.x(),
+            self.stop_scan_btn.y() + self.stop_scan_btn.height() + int(10 * y_scale)
+        )
+        self.clean_log_btn.resize(int(200 * x_scale), int(30 * y_scale))
 
         self.show_log.resize(self.widget.width(), int(0.3 * self.widget.height()))
         self.show_log.move(0, self.progress_bar.y() - self.show_log.height())

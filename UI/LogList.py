@@ -5,6 +5,7 @@ __author__ = "C418____11 <553515788@qq.com>"
 __version__ = "0.0.1Dev"
 
 import threading
+from typing import override
 
 from PyQt5.QtWidgets import QListWidget
 from PyQt5.QtCore import pyqtSignal
@@ -90,6 +91,15 @@ class LogListWidget(QListWidget):
     def updateLogNow(self):  # todo #b31b92875eca79ad3f9a451a853bf25d
         # noinspection PyUnresolvedReferences
         self.update_log_signal.emit()
+
+    @override
+    def clear(self):
+        with self._log_cache_lock:
+            super().clear()
+            self._log_cache.clear()
+            if self._log_timer is not None:
+                self._log_timer.cancel()
+                self._log_timer = None
 
     def log(self, root: list[str], txt: str, level: LogLevel):
         if level not in self._enable_log_levels:  # todo #b31b92875eca79ad3f9a451a853bf25d
