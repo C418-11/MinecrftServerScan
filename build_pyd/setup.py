@@ -117,27 +117,30 @@ def _main():
     type_ = input("1: Pyd Default Features, 2: Pyd Other Features, 3: Print Depends, 4: Exit\n")
 
     compiler = PyToPyd()
+    base_path = '.'
+    python_lib_path = r"C:\Users\C418____11\AppData\Local\Programs\Python\Python312\Lib"
 
     def a():
-        compiler.make_all(r"D:\source_code\python\MinecraftServerScan\DefaultFeatures", use_root=True)
-        compiler.make_all(r"D:\source_code\python\MinecraftServerScan\Lib")
-        compiler.make_all(r"D:\source_code\python\MinecraftServerScan\UI")
-        compiler.make_all(r"D:\source_code\python\MinecraftServerScan\MinecraftServerScanner")
+        compiler.make_all(fr"{base_path}\DefaultFeatures", use_root=True)
+        compiler.make_all(fr"{base_path}\Lib")
+        compiler.make_all(fr"{base_path}\UI")
+        compiler.make_all(fr"{base_path}\MinecraftServerScanner")
 
-        compiler.make(r"C:\Users\C418____11\AppData\Local\Programs\Python\Python312\Lib\uuid.py")
-        compiler.make(r"C:\Users\C418____11\AppData\Local\Programs\Python\Python312\Lib\__future__.py")
-        compiler.make_all(r"C:\Users\C418____11\AppData\Local\Programs\Python\Python312\Lib\concurrent\futures")
-        compiler.make_all(r"D:\source_code\python\MinecraftServerScan\.venv312\Lib\site-packages\func_timeout")
-        compiler.make_all(r"C:\Users\C418____11\AppData\Local\Programs\Python\Python312\Lib\json")
+        compiler.make(fr"{python_lib_path}\uuid.py")
+        compiler.make(fr"{python_lib_path}\__future__.py")
+        compiler.make_all(fr"{python_lib_path}\concurrent\futures")
+        compiler.make_all(fr"{base_path}\.venv312\Lib\site-packages\func_timeout")
+        compiler.make_all(fr"{python_lib_path}\json")
         shutil.copytree(
-            r"C:\Users\C418____11\AppData\Local\Programs\Python\Python312\Lib\site-packages\PIL",
+            fr"{python_lib_path}\site-packages\PIL",
             os.path.join(compiler.pyd_path, "PIL"),
+            ignore=lambda src, name: '__pycache__',
             dirs_exist_ok=True
         )
         _rename_all(compiler.pyd_path, r".cp312-win_amd64", r"")
 
     def b():
-        compiler.make_all(r"D:\source_code\python\MinecraftServerScan\Features")
+        compiler.make_all(fr"{base_path}\Features")
         _rename_all(compiler.pyd_path, r".cp312-win_amd64", r"")
 
     if '1' in type_:

@@ -578,10 +578,10 @@ class ServerScan(AbcUI):
         self.start_port = new_value
 
     @showException
-    def _on_end_port_changed(self, *_):
+    def _on_end_port_changed(self, new_value):
         if self.start_port_input.value() > self.end_port_input.value():
             self.start_port_input.setValue(self.end_port_input.value())
-        self.end_port = self.end_port_input.value()
+        self.end_port = new_value
 
     @showException
     def _on_scan_connect_timeout_changed(self, new_value):
