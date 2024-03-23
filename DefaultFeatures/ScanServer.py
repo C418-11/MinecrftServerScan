@@ -4,6 +4,7 @@
 __author__ = "C418____11 <553515788@qq.com>"
 __version__ = "0.0.2Dev"
 
+import base64
 import json
 import os
 import socket
@@ -58,9 +59,10 @@ from UI.RegisterUI import register
 from UI.tools import showException
 
 # noinspection SpellCheckingInspection
-_load_scan_server = read_default_yaml(
+_config_file = read_default_yaml(
     os.path.join(BASE_PATH, 'ScanServer.yaml'),
     {
+        "DefaultServerIcon": "./Textures/DefaultServerIcon.png",
         "DefaultTarget": [
             "127.0.0.1",
             # "s2.wemc.cc",
@@ -153,7 +155,15 @@ def _spawn_info_widget(server_info: ServerInfo, host: str, port: int, *, is_wind
     root_layout.setContentsMargins(0, 0, 0, 0)
     widget.setLayout(root_layout)
 
-    pixmap = QPixmap("./DefaultServerIcon.png")
+    icon_path = _config_file.get_default("DefaultServerIcon", None)
+    if icon_path and os.path.exists(icon_path):
+        pixmap = QPixmap(icon_path)
+    else:
+        pixmap = QPixmap()
+        # noinspection SpellCheckingInspection
+        raw_base64 = "Qk1GAAAAAAAAADYAAAAoAAAAAgAAAAIAAAABABgAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAA/wD/AAAAAAAAAAD/AP8AAA=="
+        pixmap.loadFromData(base64.b64decode(raw_base64))
+        pixmap = pixmap.scaled(64, 64, Qt.KeepAspectRatio)
 
     if server_info.favicon is not None:
         image_bytes = server_info.favicon.to_bytes()
@@ -603,7 +613,7 @@ class ServerScan(AbcUI):
         QLineEdit.setPlaceholderText(self.ip_input.lineEdit(), "IP地址或域名...")
         QLineEdit.setAlignment(self.ip_input.lineEdit(), Qt.AlignCenter)
 
-        self.ip_input.addItems(_load_scan_server["DefaultTarget"])
+        self.ip_input.addItems(_config_file["DefaultTarget"])
 
         self.scan_button = CallbackPushButton("扫描", self.widget)
         self.scan_button.setToolTip("点击开始")
