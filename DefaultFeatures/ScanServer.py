@@ -305,15 +305,20 @@ class ServerScan(AbcUI):
         self.scan_connect_timeout_input: QDoubleSpinBox | None = None
         self.scan_parse_timeout_input: QDoubleSpinBox | None = None
 
+        self.max_threads_tip: QLabel | None = None
+        self.max_threads_input: QSpinBox | None = None
+
         self.stop_scan_btn: QPushButton | None = None
         self.clean_log_btn: QPushButton | None = None
         self.auto_scroll_check_box: QCheckBox | None = None
 
-        self.scan_connect_timeout = 0.9
-        self.scan_parse_timeout = 1
-
         self.scanner: Scanner | None = None
         self.start_port, self.end_port = 1000, 65535
+
+        self.max_threads = 256
+
+        self.scan_connect_timeout = 0.9
+        self.scan_parse_timeout = 1
 
         self.result_ls: list[ServerInfo] = []
 
@@ -405,7 +410,10 @@ class ServerScan(AbcUI):
 
     @showException
     def _start_scan(self, *_):
-        self._log([], f"初始化扫描器  起始端口: {self.start_port} 结束端口: {self.end_port}")
+        self._log(
+            [],
+            f"初始化扫描器  起始端口: {self.start_port} 结束端口: {self.end_port} 最大并发量: {self.max_threads}"
+        )
         self.scan_button.setEnabled(False)
         self.scan_button.setToolTip("正在扫描请勿重复操作...")
         self.ip_input.setEnabled(False)
@@ -420,7 +428,7 @@ class ServerScan(AbcUI):
             set(range(self.start_port, self.end_port + 1)),
             _emit,
             socket_reader=_read_packet,
-            max_threads=256,
+            max_threads=self.max_threads,
         )
 
         self._log(
@@ -594,6 +602,10 @@ class ServerScan(AbcUI):
         self.scan_parse_timeout = round(new_value, dec_len)
 
     @showException
+    def _on_max_threads_changed(self, new_value):
+        self.max_threads = new_value
+
+    @showException
     def _on_clear_btn(self, *_):
         self.show_log.clear()
         self.show_log.logAlways([], "MSS(Minecraft Server Scanner)测试版\nMade By: C418____11\n")
@@ -722,6 +734,19 @@ class ServerScan(AbcUI):
         # noinspection PyUnresolvedReferences
         self.scan_parse_timeout_input.valueChanged.connect(self._on_scan_parse_timeout_changed)
 
+        self.max_threads_tip = QLabel("最大线程数", self.advanced_settings_widget)
+        self.max_threads_tip.setAlignment(Qt.AlignCenter)
+
+        self.max_threads_input = QSpinBox(self.advanced_settings_widget)
+        self.max_threads_input.setToolTip("最大线程数")
+        self.max_threads_input.setAlignment(Qt.AlignCenter)
+        self.max_threads_input.setMinimum(1)
+        self.max_threads_input.setMaximum(512)
+        self.max_threads_input.setSingleStep(8)
+        self.max_threads_input.setValue(self.max_threads)
+        # noinspection PyUnresolvedReferences
+        self.max_threads_input.valueChanged.connect(self._on_max_threads_changed)
+
         self.stop_scan_btn = QPushButton("终止扫描", self.advanced_settings_widget)
         self.stop_scan_btn.setToolTip("终止当前扫描任务")
         self.stop_scan_btn.setEnabled(False)
@@ -836,6 +861,17 @@ class ServerScan(AbcUI):
             self.scan_connect_timeout_input.y()
         )
         self.scan_parse_timeout_input.resize(int(self.scan_timeout_tip.width() / 2), int(30 * y_scale))
+
+        self.max_threads_tip.move(
+            self.scan_timeout_tip.x(),
+            self.scan_parse_timeout_input.y() + self.scan_parse_timeout_input.height() + int(10 * y_scale)
+        )
+        self.max_threads_tip.resize(int(150 * x_scale), int(20 * y_scale))
+        self.max_threads_input.move(
+            self.max_threads_tip.x(),
+            self.max_threads_tip.y() + self.max_threads_tip.height() + 5
+        )
+        self.max_threads_input.resize(int(self.max_threads_tip.width()), int(30 * y_scale))
 
         self.stop_scan_btn.move(
             self.port_input_tip.x() + self.port_input_tip.width() + int(30 * x_scale),
