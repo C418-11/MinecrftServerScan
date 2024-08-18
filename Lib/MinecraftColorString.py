@@ -132,6 +132,10 @@ def hex_to_rgb(hex_str: str) -> tuple[int, ...]:
     return tuple(int(hex_str[i:i + 2], 16) for i in (0, 2, 4))
 
 
+def rgb_to_hex(r: int, g: int, b: int) -> str:
+    return f"#{r:02x}{g:02x}{b:02x}"
+
+
 def rgb_to_ansi(r, g, b):
     # 计算红、绿、蓝三种颜色通道的强度值所对应的 ANSI 转义码
     return f"\033[38;2;{r};{g};{b}m"
@@ -154,6 +158,10 @@ def string_to_code_list(string) -> list[list[list[str] | str]]:
             break
 
         if code not in AllCodes:
+            print(f"Unknown code: {code}")
+            # 把这个code原样加进去
+            cache_string += code
+            string = string[i + 1:]
             continue
 
         tmp_string = string[:i]
@@ -354,6 +362,28 @@ class ColorString:
         for item in self._raw_data:
             html_text += generate_html_text(item["ctrls"], item["rgb"], item["text"])
         return html_text
+
+    def to_dict(self):
+        ret_dict = {"text": '', "extra": []}
+
+        for item in self._raw_data:
+            this_dict = {}
+            for ctrl in item["ctrls"]:
+                this_dict[ctrl] = True
+
+            if item["rgb"] in RGB_To_ColorName:
+                this_dict["color"] = RGB_To_ColorName[item["rgb"]]
+            else:
+                this_dict["color"] = rgb_to_hex(*item["rgb"])
+            this_dict["text"] = item["text"]
+
+            ret_dict["extra"].append(this_dict)
+
+        return ret_dict
+
+    def to_json(self):
+        import json
+        return json.dumps(self.to_dict())
 
     def __repr__(self):
         return f"<ColorString: {self._raw_data}>"
