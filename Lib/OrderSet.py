@@ -62,5 +62,16 @@ class OrderSet:
     def __contains__(self, item):
         return item in self.data
 
+    def __getitem__(self, item):
+        return self.order[item]
+
+    def __setitem__(self, item, value):
+        self.data.add(value)
+        self.order[item] = value
+
+    def __delitem__(self, item):
+        self.data.remove(item)
+        del self.order[item]
+
 
 __all__ = ("OrderSet",)
