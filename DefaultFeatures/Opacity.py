@@ -2,7 +2,7 @@
 # cython: language_level = 3
 
 __author__ = "C418____11 <553515788@qq.com>"
-__version__ = "0.0.1Dev"
+__version__ = "0.0.2Dev"
 __description__ = "Adjustable window transparency"
 
 import time
@@ -38,8 +38,11 @@ class OpacityMenu(AbcMenu):
                 return
 
             self.window.setWindowOpacity(_from + i * sub)
+            t = time.time()
             QApplication.processEvents()
-            time.sleep(0.01)
+            used = time.time() - t
+            if used < 0.01:
+                time.sleep(0.01 - used)
         self.window.setWindowOpacity(to)
 
         if self.animationRunning == this_animation:
