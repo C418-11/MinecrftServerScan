@@ -2,7 +2,7 @@
 # cython: language_level = 3
 
 __author__ = "C418____11 <553515788@qq.com>"
-__version__ = "0.0.3Dev"
+__version__ = "0.0.4Dev"
 
 import traceback
 import warnings
@@ -164,6 +164,7 @@ class UiMain:
 
         self.TopTab.setCurrentIndex(0)
 
+        # noinspection PyArgumentList
         QMetaObject.connectSlotsByName(self.Widget)
 
     @showException

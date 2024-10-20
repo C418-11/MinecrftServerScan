@@ -134,7 +134,7 @@ def load_other_features():
             print("YourFeatureName is a reserved keyword, please change it to another name.", file=_red_write)
             continue
 
-        if not bool(OtherFeatures[feature]):
+        if not OtherFeatures[feature]:
             print("Feature disabled:", feature, file=_blue_write)
             loaded_features[feature] = None
             continue
