@@ -292,4 +292,11 @@ class MatplotlibWidget(QWidget):
         self.setLayout(self.layout)
 
 
-__all__ = ("SmoothlyScrollArea", "SmoothMode", "RoundShadow", "GetScale", "MatplotlibWidget")
+__all__ = (
+    "GetScale",
+    "Radius",
+    "RoundShadow",
+    "SmoothlyScrollArea",
+    "SmoothMode",
+    "MatplotlibWidget"
+)
