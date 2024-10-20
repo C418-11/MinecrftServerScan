@@ -4,9 +4,14 @@
 __author__ = "C418____11 <553515788@qq.com>"
 __version__ = "0.0.1Dev"
 
+import sys
+from dataclasses import dataclass
 from typing import Self
+from typing import Optional
+from typing import TypeVar
+from numbers import Integral as Int
 
-ColorName_To_Code = {
+ColorName2Code = {
     "black": "§0",
     "dark_blue": "§1",
     "dark_green": "§2",
@@ -25,7 +30,7 @@ ColorName_To_Code = {
     "white": "§f",
 }
 
-CtrlName_To_Code = {
+CtrlName2Code = {
     "obfuscated": "§k",
     "bold": "§l",
     "strikethrough": "§m",
@@ -36,29 +41,26 @@ CtrlName_To_Code = {
 }
 
 CodeState = {
-    **{v: {"StackableWithOtherCodes": False} for v in ColorName_To_Code.values()},
-    **{v: {"StackableWithOtherCodes": True} for v in CtrlName_To_Code.values()},
+    **{v: {"StackableWithOtherCodes": False} for v in ColorName2Code.values()},
+    **{v: {"StackableWithOtherCodes": True} for v in CtrlName2Code.values()},
     "§r": {"StackableWithOtherCodes": False}
 }
 
-Code_To_ColorName = {v: k for k, v in ColorName_To_Code.items()}
-Code_To_CtrlName = {v: k for k, v in CtrlName_To_Code.items()}
+Code2ColorName = {v: k for k, v in ColorName2Code.items()}
+Code2CtrlName = {v: k for k, v in CtrlName2Code.items()}
 
-AllName_To_Code = {**ColorName_To_Code, **CtrlName_To_Code}
-AllCode_To_Name = {**Code_To_ColorName, **Code_To_CtrlName}
+Name2Code = {**ColorName2Code, **CtrlName2Code}
+Code2Name = {**Code2ColorName, **Code2CtrlName}
 
-ColorCode_Set = set(ColorName_To_Code.values())
-CtrlCode_Set = set(CtrlName_To_Code.values())
-AllCode_Set = ColorCode_Set | CtrlCode_Set
+ColorCodes = set(ColorName2Code.values())
+CtrlCodes = set(CtrlName2Code.values())
+Codes = ColorCodes | CtrlCodes
 
-ColorName_Set = set(ColorName_To_Code.keys())
-CtrlName_Set = set(CtrlName_To_Code.keys())
-AllName_Set = ColorName_Set | CtrlName_Set
+ColorNames = set(ColorName2Code.keys())
+CtrlNames = set(CtrlName2Code.keys())
+Names = ColorNames | CtrlNames
 
-AllCodes = ColorCode_Set | CtrlCode_Set
-AllNames = ColorName_Set | CtrlName_Set
-
-ColorName_To_ANSI = {
+ColorName2ANSI = {
     "black": "\033[30m",
     "dark_blue": "\033[34m",
     "dark_green": "\033[32m",
@@ -77,7 +79,7 @@ ColorName_To_ANSI = {
     "white": "\033[97m",
 }
 
-CtrlName_To_ANSI = {
+CtrlName2ANSI = {
     "obfuscated": "\033[8m",
     "bold": "\033[1m",
     "strikethrough": "\033[9m",
@@ -87,9 +89,9 @@ CtrlName_To_ANSI = {
     "reset": "\033[0m",
 }
 
-AllName_To_ANSI = {**ColorName_To_ANSI, **CtrlName_To_ANSI}
+Name2ANSI = {**ColorName2ANSI, **CtrlName2ANSI}
 
-ColorName_To_RGB = {
+ColorName2RGB = {
     "black": (0, 0, 0),
     "dark_blue": (0, 0, 170),
     "dark_green": (0, 170, 0),
@@ -108,7 +110,7 @@ ColorName_To_RGB = {
     "white": (255, 255, 255),
 }
 
-CtrlName_To_RGB = {
+CtrlName2RGB = {
     "reset": (255, 255, 255),
 
     "obfuscated": None,
@@ -118,8 +120,8 @@ CtrlName_To_RGB = {
     "italic": None,
 }
 
-AllName_To_RGB = {**ColorName_To_RGB, **CtrlName_To_RGB}
-RGB_To_ColorName = {v: k for k, v in ColorName_To_RGB.items()}
+Name2RGB = {**ColorName2RGB, **CtrlName2RGB}
+RGB2ColorName = {v: k for k, v in ColorName2RGB.items()}
 
 
 def hex_to_rgb(hex_str: str) -> tuple[int, ...]:
@@ -132,16 +134,16 @@ def hex_to_rgb(hex_str: str) -> tuple[int, ...]:
     return tuple(int(hex_str[i:i + 2], 16) for i in (0, 2, 4))
 
 
-def rgb_to_hex(r: int, g: int, b: int) -> str:
+def rgb_to_hex(r: Int, g: Int, b: Int) -> str:
     return f"#{r:02x}{g:02x}{b:02x}"
 
 
-def rgb_to_ansi(r, g, b):
+def rgb_to_ansi(r: Int, g: Int, b: Int) -> str:
     # 计算红、绿、蓝三种颜色通道的强度值所对应的 ANSI 转义码
     return f"\033[38;2;{r};{g};{b}m"
 
 
-def string_to_code_list(string) -> list[list[list[str] | str]]:
+def string_to_code_list(string: str) -> list[list[list[str] | str]]:
     """Convert the string to a list of lists of strings and codes"""
 
     color_with_str = []
@@ -157,8 +159,8 @@ def string_to_code_list(string) -> list[list[list[str] | str]]:
         except IndexError:
             break
 
-        if code not in AllCodes:
-            print(f"Unknown code: {code}")
+        if code not in Codes:
+            print(f"Unknown code: {code}", file=sys.stderr)
             # 把这个code原样加进去
             cache_string += code
             string = string[i + 1:]
@@ -184,8 +186,13 @@ def string_to_code_list(string) -> list[list[list[str] | str]]:
     return color_with_str
 
 
-def get_similar_RGB(r, g, b):
-    build_in_rgb: list[list[int, int, int]] = list(RGB_To_ColorName.keys())
+I1 = TypeVar("I1", bound=Int)
+I2 = TypeVar("I2", bound=Int)
+I3 = TypeVar("I3", bound=Int)
+
+
+def getSimilarRGB(r: I1, g: I2, b: I3) -> tuple[I1, I2, I3]:
+    build_in_rgb: list[list[int, int, int]] = list(RGB2ColorName.keys())
     # 在build_in_rgb中查找与r,g,b最接近的颜色并返回那个最接近的颜色
     nearest_rgb = (None, None, None)
     for i, rgb in enumerate(build_in_rgb):
@@ -203,7 +210,7 @@ def get_similar_RGB(r, g, b):
     return nearest_rgb[0], nearest_rgb[1], nearest_rgb[2]
 
 
-def generate_html_text(special_controls, color, text):
+def generate_html_text(special_controls: list[str], color: tuple[Int, Int, Int], text) -> str:
     # 初始化一个空字符串，用来存放生成的HTML文本
     html_text = ""
 
@@ -248,22 +255,29 @@ def generate_html_text(special_controls, color, text):
 ColorData = dict[str, list[str] | list[int, int, int] | str]
 
 
+@dataclass
+class ColorStringStructure:
+    text: str = ''
+    color: tuple[int, int, int] = ColorName2RGB["white"]
+    ctrls: Optional[list[str]] = None
+
+
 class ColorString:
-    def __init__(self, raw_data: list[ColorData]):
-        self._raw_data = raw_data
+    def __init__(self, raw_data: list[ColorStringStructure]):
+        self._raw_data: list[ColorStringStructure] = raw_data
 
     @property
-    def raw_data(self) -> list[ColorData]:
+    def raw_data(self) -> list[ColorStringStructure]:
         return self._raw_data.copy()
 
     @classmethod
-    def from_dict(cls, json_dict) -> Self:
+    def from_dict(cls, json_dict: dict) -> Self:
         class ParseType:
             Extra = "extra"
             Text = "text"
-            UnKnow = None
+            Unknown = None
 
-        parse_type = ParseType.UnKnow
+        parse_type = ParseType.Unknown
         if "extra" in json_dict:
             parse_type = ParseType.Extra
         elif "text" in json_dict:
@@ -275,14 +289,14 @@ class ColorString:
             parse_type = ParseType.Text
             json_dict = {"text": json_dict}
 
-        def _parse_extra(data) -> list[ColorData]:
+        def _parse_extra(data: dict) -> list[ColorStringStructure]:
             rets = []
             for item in data["extra"]:
                 rets.append(_parse_text(item))
 
             return rets
 
-        def _parse_text(data: dict) -> ColorData:
+        def _parse_text(data: dict) -> ColorStringStructure:
             if type(data) is not dict:
                 data = {"text": str(data)}
 
@@ -291,18 +305,18 @@ class ColorString:
             ctrls = []
             rgb_color = (255, 255, 255)
 
-            for code in CtrlName_Set:
+            for code in CtrlNames:
                 if data.get(code):
                     ctrls.append(code)
 
             if data.get("color"):
                 color: str = data["color"]
-                if color not in ColorName_Set:
+                if color not in ColorNames:
                     rgb_color = hex_to_rgb(color)
                 else:
-                    rgb_color = AllName_To_RGB[color]
+                    rgb_color = Name2RGB[color]
 
-            return {"ctrls": ctrls, "rgb": rgb_color, "text": string}
+            return ColorStringStructure(text=string, color=rgb_color, ctrls=ctrls)
 
         if parse_type == ParseType.Extra:
             result = _parse_extra(json_dict)
@@ -322,60 +336,60 @@ class ColorString:
             ctrls = []
             color_rgb = (255, 255, 255)
             for code in code_list:
-                code_name = AllCode_To_Name[code]
-                if code in CtrlCode_Set:
+                code_name = Code2Name[code]
+                if code in CtrlCodes:
                     ctrls.append(code_name)
                     continue
 
-                color_rgb = ColorName_To_RGB[code_name]
+                color_rgb = ColorName2RGB[code_name]
 
-            data.append({"ctrls": ctrls, "rgb": color_rgb, "text": text})
+            data.append(ColorStringStructure(text=text, color=color_rgb, ctrls=ctrls))
         return cls(data)
 
-    def to_ansi(self):
+    def to_ansi(self) -> str:
         string = ''
         for item in self._raw_data:
             ansi_cache = []
-            for ctrl in item["ctrls"]:
-                ansi_cache.append(AllName_To_ANSI[ctrl])
-            ansi_cache.append(rgb_to_ansi(*item["rgb"]))
+            for ctrl in item.ctrls:
+                ansi_cache.append(Name2ANSI[ctrl])
+            ansi_cache.append(rgb_to_ansi(*item.color))
             string += ''.join(ansi_cache)
-            string += item["text"]
+            string += item.text
 
         return string
 
-    def to_string(self):
+    def to_string(self) -> str:
         string = ''
         for item in self._raw_data:
             code_cache = []
-            for ctrl in item["ctrls"]:
-                code_cache.append(CtrlName_To_Code[ctrl])
+            for ctrl in item.ctrls:
+                code_cache.append(CtrlName2Code[ctrl])
 
-            code_cache.insert(0, ColorName_To_Code[RGB_To_ColorName[get_similar_RGB(*item["rgb"])]])
+            code_cache.insert(0, ColorName2Code[RGB2ColorName[getSimilarRGB(*item.color)]])
             string += ''.join(code_cache)
-            string += item["text"]
+            string += item.text
 
         return string
 
-    def to_html(self):
+    def to_html(self) -> str:
         html_text = ""
         for item in self._raw_data:
-            html_text += generate_html_text(item["ctrls"], item["rgb"], item["text"])
+            html_text += generate_html_text(item.ctrls, item.color, item.text)
         return html_text
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         ret_dict = {"text": '', "extra": []}
 
         for item in self._raw_data:
             this_dict = {}
-            for ctrl in item["ctrls"]:
+            for ctrl in item.ctrls:
                 this_dict[ctrl] = True
 
-            if item["rgb"] in RGB_To_ColorName:
-                this_dict["color"] = RGB_To_ColorName[item["rgb"]]
+            if item.color in RGB2ColorName:
+                this_dict["color"] = RGB2ColorName[item.color]
             else:
-                this_dict["color"] = rgb_to_hex(*item["rgb"])
-            this_dict["text"] = item["text"]
+                this_dict["color"] = rgb_to_hex(*item.color)
+            this_dict["text"] = item.text
 
             ret_dict["extra"].append(this_dict)
 
@@ -389,4 +403,37 @@ class ColorString:
         return f"<ColorString: {self._raw_data}>"
 
     def __str__(self):
-        return str(self._raw_data)
+        return self.to_string()
+
+
+__all__ = (
+    "ColorName2Code",
+    "CtrlName2Code",
+    "Code2ColorName",
+    "Code2CtrlName",
+    "Name2Code",
+    "Code2Name",
+
+    "ColorCodes",
+    "CtrlCodes",
+    "ColorNames",
+    "CtrlNames",
+    "Codes",
+    "Names",
+
+    "ColorName2ANSI",
+    "CtrlName2ANSI",
+    "Name2ANSI",
+
+    "ColorName2RGB",
+    "CtrlName2RGB",
+    "Name2RGB",
+    "RGB2ColorName",
+
+    "CodeState",
+
+    "getSimilarRGB",
+
+    "ColorStringStructure",
+    "ColorString",
+)
