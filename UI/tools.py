@@ -2,6 +2,7 @@
 # cython: language_level = 3
 
 import os
+import sys
 import traceback
 from functools import wraps
 from typing import Union
@@ -25,6 +26,7 @@ def showException(func):
             traceback.print_exception(err)
             if type(err) is KeyboardInterrupt:
                 raise
+            sys.exit(1)
 
     return wrapper
 
