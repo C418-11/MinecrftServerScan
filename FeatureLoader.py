@@ -22,6 +22,7 @@ DefaultFeatures = read_default_yaml(
         "1|WindowTop": True,  # 这里的 '|' 是为了读取后进行排序
         "2|Opacity": True,
         "3|ScanServer": True,
+        "4|ScanSettings": False,
     }
 )
 

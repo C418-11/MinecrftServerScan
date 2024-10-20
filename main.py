@@ -18,8 +18,8 @@ from Lib.Configs import BASE_PATH
 from Lib.Configs import init as init_configs
 from Lib.Configs import read_default_yaml
 from Lib.StdColor import ColorWrite
+from PyQt5.QtWidgets import QMainWindow
 from UI import RegisterUI
-from UI.BaseWidgets import GetScale
 from UI.Main import UiMain
 
 _load_other_futures = read_default_yaml(
@@ -31,6 +31,9 @@ _load_other_futures = read_default_yaml(
 
 
 def main():
+    QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
+    QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
+    QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.RoundPreferFloor)
     app = QApplication(sys.argv)
 
     init_configs()
@@ -44,8 +47,8 @@ def main():
             print("An error occurred while loading another futures:", file=sys.stderr)
             traceback.print_exception(e)
 
-    widget = GetScale()
-    ui = UiMain(widget)
+    window = QMainWindow()
+    ui = UiMain(window)
     ui.setupUi()
 
     RegisterUI.menu.sort(key=lambda x: x.priority())
@@ -54,7 +57,7 @@ def main():
     _write = ColorWrite(sys.stdout, colorama.Fore.LIGHTCYAN_EX)
 
     for Menu in tqdm(RegisterUI.menu, leave=True, file=_write, desc="Registering menus", unit="Menu"):
-        menu = Menu(ui.MenuBar, widget)
+        menu = Menu(ui.MenuBar, window)
         menu.setupUi()
         ui.MenuBar.addMenu(menu.getMenuWidget())
 
@@ -62,11 +65,8 @@ def main():
         ui.append(w)
 
     # noinspection PyUnresolvedReferences
-    widget.setWindowFlags(Qt.CustomizeWindowHint)
-    widget.show()
-
-    if len(ui.top_tabs) > 0 and hasattr(ui.top_tabs[0], "ReScale"):
-        ui.top_tabs[0].ReScale(widget.scaleWidth, widget.scaleHeight)
+    window.setWindowFlags(Qt.CustomizeWindowHint)
+    window.show()
 
     sys.exit(app.exec_())
 

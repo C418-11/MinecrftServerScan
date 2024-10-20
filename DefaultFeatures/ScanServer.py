@@ -8,10 +8,13 @@ import base64
 import json
 import os
 import socket
+import sys
+
+import colorama
 import threading
 from typing import Callable
 from typing import override
-
+from Lib.StdColor import ColorWrite
 from PIL import Image
 from PyQt5.QtCore import QModelIndex
 from PyQt5.QtCore import QSize
@@ -20,20 +23,15 @@ from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtGui import QFont
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QApplication
-from PyQt5.QtWidgets import QCheckBox
 from PyQt5.QtWidgets import QComboBox
-from PyQt5.QtWidgets import QDoubleSpinBox
 from PyQt5.QtWidgets import QFileDialog
 from PyQt5.QtWidgets import QHBoxLayout
 from PyQt5.QtWidgets import QLabel
-from PyQt5.QtWidgets import QLineEdit
 from PyQt5.QtWidgets import QListWidget
 from PyQt5.QtWidgets import QListWidgetItem
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtWidgets import QProgressBar
 from PyQt5.QtWidgets import QPushButton
-from PyQt5.QtWidgets import QScrollArea
-from PyQt5.QtWidgets import QSpinBox
 from PyQt5.QtWidgets import QTabWidget
 from PyQt5.QtWidgets import QVBoxLayout
 from PyQt5.QtWidgets import QWidget
@@ -54,7 +52,6 @@ from MinecraftServerScanner.Scanner import Scanner
 from UI.ABC import AbcUI
 from UI.LogList import LogLevel
 from UI.LogList import LogListWidget
-from UI.LogList import NonUsable
 from UI.RegisterUI import register
 from UI.tools import showException
 
@@ -233,7 +230,6 @@ def _spawn_info_widget(server_info: ServerInfo, host: str, port: int, *, is_wind
         )
 
         msg_box.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, is_window_top())
-
         msg_box.setText(player_html)
         msg_box.exec()
 
@@ -251,7 +247,7 @@ def _spawn_info_widget(server_info: ServerInfo, host: str, port: int, *, is_wind
 
     desc_label = QLabel()
 
-    desc_html = ColorString.from_string(server_info.description.to_string()).to_html()
+    desc_html = server_info.description.to_html()
     desc_html = _html_add_background_color(
         (255, 255, 255),
         (220, 220, 220),
@@ -271,46 +267,20 @@ def _spawn_info_widget(server_info: ServerInfo, host: str, port: int, *, is_wind
 
 @register
 class ServerScan(AbcUI):
-    def __init__(self, _parent: QTabWidget):
-        super().__init__(_parent)
+    def __init__(self, _parent: QTabWidget, *_):
+        super().__init__(_parent, None)
 
         self.widget: QWidget | None = None
 
+        self.input_area: QWidget | None = None
         self.ip_input: QComboBox | None = None
-
         self.scan_button: CallbackPushButton | None = None
-        self.show_log: LogListWidget | None = None
 
+        self.show_result_list: QListWidget | None = None
         self.result_count_label: QLabel | None = None
 
+        self.show_log: LogListWidget | None = None
         self.progress_bar: QProgressBar | None = None
-
-        self.scroll_area: QScrollArea | None = None
-        self.scroll_area_widget: QWidget | None = None
-        self.show_result_list: QListWidget | None = None
-
-        self.show_advanced_settings: QCheckBox | None = None
-        self.advanced_settings_widget: QWidget | None = None
-
-        self.log_level_tip: QLabel | None = None
-        self.enable_log_level_list: QListWidget | None = None
-        self.add_log_level_combo: QComboBox | None = None
-        self.add_log_level_btn: QPushButton | None = None
-
-        self.port_input_tip: QLabel | None = None
-        self.start_port_input: QSpinBox | None = None
-        self.end_port_input: QSpinBox | None = None
-
-        self.scan_timeout_tip: QLabel | None = None
-        self.scan_connect_timeout_input: QDoubleSpinBox | None = None
-        self.scan_parse_timeout_input: QDoubleSpinBox | None = None
-
-        self.max_threads_tip: QLabel | None = None
-        self.max_threads_input: QSpinBox | None = None
-
-        self.stop_scan_btn: QPushButton | None = None
-        self.clean_log_btn: QPushButton | None = None
-        self.auto_scroll_check_box: QCheckBox | None = None
 
         self.scanner: Scanner | None = None
         self.start_port, self.end_port = 1000, 65535
@@ -332,10 +302,10 @@ class ServerScan(AbcUI):
             try:
                 parsed = json.loads(e.result[3:].decode())
             except Exception as err:
-                self._log([e.port], f"解析失败 Error: {type(err).__name__}: {err}", LogLevel.WARNING)
+                self.log([e.port], f"解析失败 Error: {type(err).__name__}: {err}", LogLevel.WARNING)
                 return
 
-            self._log([e.port], f"存在服务器", LogLevel.DEBUG)
+            self.log([e.port], f"存在服务器", LogLevel.DEBUG)
 
             server_info = ServerInfo(parsed)
             self.result_ls.append(server_info)
@@ -356,11 +326,11 @@ class ServerScan(AbcUI):
                 return
             if type(e.error) is socket.gaierror:
                 return
-            self._log([e.port], f"意外的错误 {type(e.error).__name__}: {e.error}", LogLevel.ERROR)
+            self.log([e.port], f"意外的错误 {type(e.error).__name__}: {e.error}", LogLevel.ERROR)
 
         def _parse_start(e: StartEvent):
             len_port = len(e.port)
-            self._log([e.host], f"开始扫描 共计{len_port}个端口")
+            self.log([e.host], f"开始扫描 共计{len_port}个端口")
             self.scan_button.setEnabled(False)
             self.ip_input.setEnabled(False)
 
@@ -382,13 +352,13 @@ class ServerScan(AbcUI):
             message += f"成功完成{len(e.finished_ports)}个端口\n"
             message += f"在{len(e.error_ports)}个端口上发生错误\n"
             message += f"总计用时{e.used_time_ns / 1000000000:.2f}秒"
-            self._log([], message, LogLevel.INFO)
+            self.log([], message, LogLevel.INFO)
             self.result_count_label.setText(f"扫描结果: {len(self.result_ls)}")
             self.progress_bar.setValue(self.progress_bar.maximum())
             self.progress_bar.setToolTip(f"扫描结束 共计{len(e.all_ports)}个端口")
             self.scan_button.setEnabled(True)
             self.ip_input.setEnabled(True)
-            self.scan_button.setToolTip('点击开始')
+            self.scan_button.setToolTip("点击开始")
             self.ip_input.setToolTip('')
 
         if type(event) is ThreadStartEvent:
@@ -410,10 +380,8 @@ class ServerScan(AbcUI):
 
     @showException
     def _start_scan(self, *_):
-        self._log(
-            [],
-            f"初始化扫描器  起始端口: {self.start_port} 结束端口: {self.end_port} 最大并发量: {self.max_threads}"
-        )
+        self.log([],
+                 f"初始化扫描器  起始端口: {self.start_port} 结束端口: {self.end_port} 最大并发量: {self.max_threads}")
         self.scan_button.setEnabled(False)
         self.scan_button.setToolTip("正在扫描请勿重复操作...")
         self.ip_input.setEnabled(False)
@@ -431,24 +399,11 @@ class ServerScan(AbcUI):
             max_threads=self.max_threads,
         )
 
-        self._log(
-            [],
-            f"设置扫描超时  连接超时: {self.scan_connect_timeout}秒 解析超时: {self.scan_parse_timeout}秒"
-        )
+        self.log([], f"设置扫描超时  连接超时: {self.scan_connect_timeout}秒 解析超时: {self.scan_parse_timeout}秒")
         self.scanner.connect_timeout = self.scan_connect_timeout
         self.scanner.scan_timeout = self.scan_connect_timeout + self.scan_parse_timeout
 
-        def _start():
-            self.scanner.start()
-            self.stop_scan_btn.setEnabled(True)
-
-        threading.Thread(target=_start, daemon=True, name="Start Scanner").start()
-
-    @showException
-    def _stop_scan(self, *_):
-        self.stop_scan_btn.setEnabled(False)
-        self._log([], "正在尝试终止扫描...")
-        self.scanner.stop(wait=False)
+        threading.Thread(target=self.scanner.start, daemon=True, name="Start Scanner").start()
 
     @showException
     def _showServerDetails(self, item: QListWidgetItem):
@@ -546,346 +501,71 @@ class ServerScan(AbcUI):
 
         msg_box.exec()
 
-    def _log(self, root: list[str] | list, text: str, level: LogLevel = LogLevel.INFO):
+    def log(self, root: list[str] | list, text: str, level: LogLevel = LogLevel.INFO):
         self.show_log.log(root, text, level)
-
-    @showException
-    def _disable_log_level(self, item: QListWidgetItem):
-        index = self.enable_log_level_list.row(item)
-        self.enable_log_level_list.takeItem(index)
-
-        self.show_log.disableLogLevels(LogLevel(item.text()))
-
-        self.add_log_level_combo.addItem(item.text())
-
-        self.add_log_level_combo.setVisible(True)
-        self.add_log_level_btn.setVisible(True)
-
-    @showException
-    def _enable_log_level(self, *_):
-        self.show_log.enableLogLevels(LogLevel(self.add_log_level_combo.currentText()))
-
-        self.enable_log_level_list.clear()
-        self.enable_log_level_list.addItems(self.show_log.enable_log_levels - NonUsable)
-
-        self.add_log_level_combo.removeItem(self.add_log_level_combo.currentIndex())
-        if self.add_log_level_combo.count() == 0:
-            self.enable_log_level_list.setFocus()
-            self.add_log_level_combo.setVisible(False)
-            self.add_log_level_btn.setVisible(False)
-
-    @showException
-    def _show_advanced_settings(self, *_):
-        self.advanced_settings_widget.setVisible(True)
-        self.scroll_area.setFocus()
-
-    @showException
-    def _on_start_port_changed(self, new_value):
-        if self.end_port_input.value() < new_value:
-            self.end_port_input.setValue(new_value)
-        self.start_port = new_value
-
-    @showException
-    def _on_end_port_changed(self, new_value):
-        if self.start_port_input.value() > self.end_port_input.value():
-            self.start_port_input.setValue(self.end_port_input.value())
-        self.end_port = new_value
-
-    @showException
-    def _on_scan_connect_timeout_changed(self, new_value):
-        dec_len = self.scan_connect_timeout_input.decimals()
-        self.scan_connect_timeout = round(new_value, dec_len)
-
-    @showException
-    def _on_scan_parse_timeout_changed(self, new_value):
-        dec_len = self.scan_parse_timeout_input.decimals()
-        self.scan_parse_timeout = round(new_value, dec_len)
-
-    @showException
-    def _on_max_threads_changed(self, new_value):
-        self.max_threads = new_value
-
-    @showException
-    def _on_clear_btn(self, *_):
-        self.show_log.clear()
-        self.show_log.logAlways([], "MSS(Minecraft Server Scanner)测试版\nMade By: C418____11\n")
-
-    @showException
-    def _auto_scroll_type_changed(self, state):
-        is_enable = bool(state)
-        self.show_log.enable_auto_scroll = is_enable
 
     @override
     def setupUi(self):
         self.widget = QWidget(self._parent)
         self.widget.setFont(QFont(FontFamily, NormalFont))
 
-        self.ip_input = QComboBox(self.widget)
+        self.input_area = QWidget(self.widget)
+        self.ip_input = QComboBox(self.input_area)
         self.ip_input.setEditable(True)
-        QLineEdit.setPlaceholderText(self.ip_input.lineEdit(), "IP地址或域名...")
-        QLineEdit.setAlignment(self.ip_input.lineEdit(), Qt.AlignCenter)
-
         self.ip_input.addItems(_config_file["DefaultTarget"])
+        self.scan_button = CallbackPushButton(self.input_area)
 
-        self.scan_button = CallbackPushButton("扫描", self.widget)
-        self.scan_button.setToolTip("点击开始")
+        self.result_count_label = QLabel(self.widget)
+        self.result_count_label.setAlignment(Qt.AlignCenter)
+
+        self.show_log = LogListWidget(self.widget)
+        self.show_log.setStyleSheet("background-color: rgba(255, 0, 0, 64);")
+        self.show_log.setAutoScroll(True)
+        self.progress_bar = QProgressBar(self.widget)
+        self.progress_bar.setMinimum(0)
+
+        self.show_result_list = QListWidget(self.widget)
+
+        self.widget.setLayout(QVBoxLayout())
+        self.widget.layout().setContentsMargins(0, 0, 0, 0)
+        self.widget.layout().setSpacing(0)
+        self.widget.layout().addWidget(self.input_area)
+        self.widget.layout().addWidget(self.result_count_label)
+        self.widget.layout().addWidget(self.show_result_list)
+        self.widget.layout().setStretch(2, 2)
+        self.widget.layout().addWidget(self.show_log)
+        self.widget.layout().setStretch(3, 1)
+        self.widget.layout().addWidget(self.progress_bar)
+        self.input_area.setLayout(QHBoxLayout())
+        self.input_area.layout().setContentsMargins(0, 0, 0, 0)
+        self.input_area.layout().setSpacing(0)
+        self.input_area.layout().addWidget(self.ip_input)
+        self.input_area.layout().setStretch(0, 3)
+        self.input_area.layout().addWidget(self.scan_button)
+        self.input_area.layout().setStretch(1, 1)
+
+        self.reTranslate()
+
         # noinspection PyUnresolvedReferences
         self.scan_button.clicked.connect(self._start_scan)
         # noinspection PyUnresolvedReferences
         self.scan_button.callback_signal.connect(self._callback)
-
-        self.result_count_label = QLabel("未进行过扫描", self.widget)
-        self.result_count_label.setAlignment(Qt.AlignCenter)
-
-        self.show_log = LogListWidget(self.widget)
-        self.show_log.setToolTip("扫描日志")
-        self.show_log.logAlways([], "MSS(Minecraft Server Scanner)测试版\nMade By: C418____11\n")
-        self.show_log.setStyleSheet("background-color: rgba(255, 0, 0, 64);")
-
-        self.progress_bar = QProgressBar(self.widget)
-        self.progress_bar.setToolTip("未开始扫描")
-        self.progress_bar.setMinimum(0)
-
-        self.scroll_area = QScrollArea(self.widget)
-        self.scroll_area_widget = QWidget(self.scroll_area)
-        self.scroll_area.setWidget(self.scroll_area_widget)
-        self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
-        self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-
-        self.show_result_list = QListWidget(self.scroll_area_widget)
-        self.show_result_list.setToolTip("扫描结果")
-        self.show_result_list.setStyleSheet("border: 0px")
         # noinspection PyUnresolvedReferences
         self.show_result_list.itemDoubleClicked.connect(self._showServerDetails)
 
-        self.show_advanced_settings = QCheckBox("显示高级设置", self.scroll_area_widget)
-        self.show_advanced_settings.setChecked(False)
-        self.show_advanced_settings.setToolTip("显示高级设置")
+    def reTranslate(self):
+        self.ip_input.lineEdit().setPlaceholderText("IP地址或域名...")
+        self.ip_input.lineEdit().setAlignment(Qt.AlignCenter)
 
-        # noinspection PyUnresolvedReferences
-        self.show_advanced_settings.clicked.connect(self._show_advanced_settings)
+        self.scan_button.setText("扫描")
+        self.scan_button.setToolTip("点击开始")
 
-        self.advanced_settings_widget = QWidget(self.scroll_area_widget)
-        self.advanced_settings_widget.hide()
+        self.result_count_label.setText("未进行过扫描")
+        self.show_result_list.setToolTip("扫描结果")
 
-        self.log_level_tip = QLabel("启用的日志级别", self.advanced_settings_widget)
-        self.log_level_tip.setAlignment(Qt.AlignCenter)
-
-        self.enable_log_level_list = QListWidget(self.advanced_settings_widget)
-        self.enable_log_level_list.setToolTip("双击删除")
-        self.enable_log_level_list.addItems(self.show_log.enable_log_levels - NonUsable)
-        # noinspection PyUnresolvedReferences
-        self.enable_log_level_list.itemDoubleClicked.connect(self._disable_log_level)
-
-        self.add_log_level_combo = QComboBox(self.advanced_settings_widget)
-        self.add_log_level_btn = QPushButton("添加", self.advanced_settings_widget)
-        self.add_log_level_btn.hide()
-        self.add_log_level_combo.hide()
-        # noinspection PyUnresolvedReferences
-        self.add_log_level_btn.clicked.connect(self._enable_log_level)
-
-        self.port_input_tip = QLabel("端口范围", self.advanced_settings_widget)
-        self.port_input_tip.setAlignment(Qt.AlignCenter)
-
-        self.start_port_input = QSpinBox(self.advanced_settings_widget)
-        self.start_port_input.setToolTip("*起始* 端口")
-        self.start_port_input.setAlignment(Qt.AlignCenter)
-        self.start_port_input.setMinimum(1)
-        self.start_port_input.setMaximum(65535)
-        self.start_port_input.setSingleStep(200)
-        self.start_port_input.setValue(self.start_port)
-        # noinspection PyUnresolvedReferences
-        self.start_port_input.valueChanged.connect(self._on_start_port_changed)
-
-        self.end_port_input = QSpinBox(self.advanced_settings_widget)
-        self.end_port_input.setToolTip("*结束* 端口")
-        self.end_port_input.setAlignment(Qt.AlignCenter)
-        self.end_port_input.setMinimum(1)
-        self.end_port_input.setMaximum(65535)
-        self.end_port_input.setSingleStep(200)
-        self.end_port_input.setValue(self.end_port)
-        # noinspection PyUnresolvedReferences
-        self.end_port_input.valueChanged.connect(self._on_end_port_changed)
-
-        self.scan_timeout_tip = QLabel("扫描超时时限", self.advanced_settings_widget)
-        self.scan_timeout_tip.setAlignment(Qt.AlignCenter)
-
-        self.scan_connect_timeout_input = QDoubleSpinBox(self.advanced_settings_widget)
-        self.scan_connect_timeout_input.setToolTip("扫描 *连接* 超时时限")
-        self.scan_connect_timeout_input.setAlignment(Qt.AlignCenter)
-        self.scan_connect_timeout_input.setDecimals(1)
-        self.scan_connect_timeout_input.setMinimum(0.1)
-        self.scan_connect_timeout_input.setMaximum(10)
-        self.scan_connect_timeout_input.setSingleStep(0.1)
-        self.scan_connect_timeout_input.setValue(self.scan_connect_timeout)
-        self.scan_connect_timeout_input.setSuffix("秒")
-        # noinspection PyUnresolvedReferences
-        self.scan_connect_timeout_input.valueChanged.connect(self._on_scan_connect_timeout_changed)
-
-        self.scan_parse_timeout_input = QDoubleSpinBox(self.advanced_settings_widget)
-        self.scan_parse_timeout_input.setToolTip("扫描 *解析* 超时时限")
-        self.scan_parse_timeout_input.setAlignment(Qt.AlignCenter)
-        self.scan_parse_timeout_input.setDecimals(1)
-        self.scan_parse_timeout_input.setMinimum(0.1)
-        self.scan_parse_timeout_input.setMaximum(10)
-        self.scan_parse_timeout_input.setSingleStep(0.1)
-        self.scan_parse_timeout_input.setValue(self.scan_parse_timeout)
-        self.scan_parse_timeout_input.setSuffix("秒")
-        # noinspection PyUnresolvedReferences
-        self.scan_parse_timeout_input.valueChanged.connect(self._on_scan_parse_timeout_changed)
-
-        self.max_threads_tip = QLabel("最大线程数", self.advanced_settings_widget)
-        self.max_threads_tip.setAlignment(Qt.AlignCenter)
-
-        self.max_threads_input = QSpinBox(self.advanced_settings_widget)
-        self.max_threads_input.setToolTip("最大线程数")
-        self.max_threads_input.setAlignment(Qt.AlignCenter)
-        self.max_threads_input.setMinimum(1)
-        self.max_threads_input.setMaximum(512)
-        self.max_threads_input.setSingleStep(8)
-        self.max_threads_input.setValue(self.max_threads)
-        # noinspection PyUnresolvedReferences
-        self.max_threads_input.valueChanged.connect(self._on_max_threads_changed)
-
-        self.stop_scan_btn = QPushButton("终止扫描", self.advanced_settings_widget)
-        self.stop_scan_btn.setToolTip("终止当前扫描任务")
-        self.stop_scan_btn.setEnabled(False)
-        # noinspection PyUnresolvedReferences
-        self.stop_scan_btn.clicked.connect(self._stop_scan)
-
-        self.clean_log_btn = QPushButton("清空日志", self.advanced_settings_widget)
-        self.clean_log_btn.setToolTip("清空现存日志")
-        # noinspection PyUnresolvedReferences
-        self.clean_log_btn.clicked.connect(self._on_clear_btn)
-
-        # 日志自动滚动切换按钮
-        self.auto_scroll_check_box = QCheckBox("日志自动滚动", self.advanced_settings_widget)
-        self.auto_scroll_check_box.setToolTip("切换日志自动滚动")
-        # noinspection PyUnresolvedReferences
-        self.auto_scroll_check_box.stateChanged.connect(self._auto_scroll_type_changed)
-        self.auto_scroll_check_box.setChecked(True)
-
-    @override
-    @showException
-    def ReScale(self, x_scale: float, y_scale: float):
-        font_height = self.ip_input.fontMetrics().height()
-
-        self.scan_button.resize(
-            int(self.widget.width() * 0.199),
-            int(font_height * 1.5 * y_scale)
-        )
-
-        self.ip_input.resize(
-            int(self.widget.width() * 0.799),
-            int(font_height * 1.5 * y_scale)
-        )
-
-        self.ip_input.move(
-            int((self.widget.width() - self.ip_input.width() - self.scan_button.width()) / 2),
-            0
-        )
-
-        self.scan_button.move(
-            self.ip_input.x() + self.ip_input.width(),
-            self.ip_input.y()
-        )
-
-        self.result_count_label.setFixedWidth(self.widget.width())
-
-        self.result_count_label.move(
-            int((self.widget.width() - self.result_count_label.width()) / 2),
-            self.ip_input.height()
-        )
-
-        self.progress_bar.resize(self.widget.width(), int(30 * y_scale))
-        self.progress_bar.move(0, self.widget.height() - self.progress_bar.height())
-
-        self.scroll_area.resize(self.widget.width(), int(0.5 * self.widget.height()))
-        self.scroll_area.move(0, self.result_count_label.y() + self.result_count_label.height())
-        self.scroll_area_widget.resize(self.scroll_area.width(), self.scroll_area.height() * 2)
-
-        self.show_result_list.resize(
-            self.widget.width() - self.scroll_area.verticalScrollBar().width() - 3,
-            int(0.5 * self.widget.height())
-        )
-        self.show_advanced_settings.move(0, self.show_result_list.y() + self.show_result_list.height())
-
-        self.advanced_settings_widget.move(0, self.show_advanced_settings.y())
-        self.advanced_settings_widget.resize(self.widget.size())
-
-        self.auto_scroll_check_box.resize(
-            120,
-            30
-        )
-        self.auto_scroll_check_box.move(
-            self.advanced_settings_widget.width() - self.auto_scroll_check_box.width() -
-            self.scroll_area.verticalScrollBar().width() - 3,
-            0
-        )
-
-        self.log_level_tip.move(0, int(37 * y_scale))
-        self.log_level_tip.resize(int(200 * x_scale), int(20 * y_scale))
-        self.enable_log_level_list.move(0, self.log_level_tip.y() + self.log_level_tip.height() + 5)
-        self.enable_log_level_list.resize(int(200 * x_scale), int(130 * y_scale))
-        self.add_log_level_combo.move(0, self.enable_log_level_list.y() + self.enable_log_level_list.height() + 5)
-        self.add_log_level_combo.resize(int(100 * x_scale), int(30 * y_scale))
-        self.add_log_level_btn.move(
-            self.add_log_level_combo.x() + self.add_log_level_combo.width(),
-            self.enable_log_level_list.y() + self.enable_log_level_list.height() + 4
-        )
-        self.add_log_level_btn.resize(int(100 * x_scale), int(32 * y_scale))
-
-        self.port_input_tip.move(
-            self.log_level_tip.x() + self.log_level_tip.width() + int(10 * x_scale),
-            int(37 * y_scale)
-        )
-        self.port_input_tip.resize(int(150 * x_scale), int(20 * y_scale))
-        self.start_port_input.move(self.port_input_tip.x(), self.port_input_tip.y() + self.port_input_tip.height() + 5)
-        self.start_port_input.resize(int(self.port_input_tip.width() / 2), int(30 * y_scale))
-        self.end_port_input.move(self.start_port_input.x() + self.start_port_input.width(), self.start_port_input.y())
-        self.end_port_input.resize(int(self.port_input_tip.width() / 2), int(30 * y_scale))
-
-        self.scan_timeout_tip.move(
-            self.port_input_tip.x(),
-            self.end_port_input.y() + self.end_port_input.height() + int(10 * y_scale)
-        )
-
-        self.scan_timeout_tip.resize(int(150 * x_scale), int(20 * y_scale))
-        self.scan_connect_timeout_input.move(
-            self.scan_timeout_tip.x(),
-            self.scan_timeout_tip.y() + self.scan_timeout_tip.height() + 5
-        )
-        self.scan_connect_timeout_input.resize(int(self.scan_timeout_tip.width() / 2), int(30 * y_scale))
-        self.scan_parse_timeout_input.move(
-            self.scan_connect_timeout_input.x() + self.scan_connect_timeout_input.width(),
-            self.scan_connect_timeout_input.y()
-        )
-        self.scan_parse_timeout_input.resize(int(self.scan_timeout_tip.width() / 2), int(30 * y_scale))
-
-        self.max_threads_tip.move(
-            self.scan_timeout_tip.x(),
-            self.scan_parse_timeout_input.y() + self.scan_parse_timeout_input.height() + int(10 * y_scale)
-        )
-        self.max_threads_tip.resize(int(150 * x_scale), int(20 * y_scale))
-        self.max_threads_input.move(
-            self.max_threads_tip.x(),
-            self.max_threads_tip.y() + self.max_threads_tip.height() + 5
-        )
-        self.max_threads_input.resize(int(self.max_threads_tip.width()), int(30 * y_scale))
-
-        self.stop_scan_btn.move(
-            self.port_input_tip.x() + self.port_input_tip.width() + int(30 * x_scale),
-            self.port_input_tip.y()
-        )
-        self.stop_scan_btn.resize(int(200 * x_scale), int(30 * y_scale))
-        self.clean_log_btn.move(
-            self.stop_scan_btn.x(),
-            self.stop_scan_btn.y() + self.stop_scan_btn.height() + int(10 * y_scale)
-        )
-        self.clean_log_btn.resize(int(200 * x_scale), int(30 * y_scale))
-
-        self.show_log.resize(self.widget.width(), int(0.3 * self.widget.height()))
-        self.show_log.move(0, self.progress_bar.y() - self.show_log.height())
+        self.show_log.setToolTip("扫描日志")
+        self.show_log.logAlways([], "MSS(Minecraft Server Scanner)测试版\nMade By: C418____11\n")
+        self.progress_bar.setToolTip("未开始扫描")
 
     @override
     def getMainWidget(self):
@@ -894,3 +574,12 @@ class ServerScan(AbcUI):
     @override
     def getTagName(self):
         return "服务器扫描"
+
+    @override
+    def exit(self):
+        if self.scanner is None:
+            return
+        light_magenta = ColorWrite(sys.stdout, colorama.Fore.LIGHTMAGENTA_EX)
+        print("Stopping Scanner...", file=light_magenta)
+        self.scanner.stop()
+        print("Scanner Stopped", file=light_magenta)

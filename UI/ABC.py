@@ -4,18 +4,23 @@
 
 from abc import ABC
 from abc import abstractmethod
+from typing import Any
+from typing import Optional
 
 from PyQt5.QtWidgets import *
 
 
 class AbcUI(ABC):
-    def __init__(self, _parent: QTabWidget):
+    def __init__(self, _parent: QTabWidget, _main_ui: Optional[Any]):
         self._parent = _parent
-
-    def ReScale(self, x_scale: float, y_scale: float):
-        ...
+        if _main_ui is not None:
+            self._main_ui = _main_ui
 
     def exit(self):
+        ...
+
+    @abstractmethod
+    def reTranslate(self):
         ...
 
     @abstractmethod
@@ -36,7 +41,7 @@ class AbcUI(ABC):
 
 
 class AbcMenu(ABC):
-    def __init__(self, _menubar: QMenuBar, _window: QWidget):
+    def __init__(self, _menubar: QMenuBar, _window: QMainWindow):
         self.menubar = _menubar
         self.window = _window
 
