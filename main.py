@@ -10,6 +10,7 @@ import traceback
 
 import colorama
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication
 from tqdm import tqdm
 
@@ -25,7 +26,7 @@ from UI.Main import UiMain
 _load_other_futures = read_default_yaml(
     os.path.join(BASE_PATH, 'FuturesLoad.yaml'),
     {
-        "Load": True,
+        "Load": False,
     }
 )
 
@@ -48,6 +49,7 @@ def main():
             traceback.print_exception(e)
 
     window = QMainWindow()
+    window.setWindowIcon(QIcon("./Textures/icon.png"))
     ui = UiMain(window)
     ui.setupUi()
 

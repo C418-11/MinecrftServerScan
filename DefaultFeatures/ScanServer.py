@@ -37,6 +37,7 @@ from PyQt5.QtWidgets import QVBoxLayout
 from PyQt5.QtWidgets import QWidget
 
 from Lib.Configs import BASE_PATH
+from Lib.Configs import SmallFont
 from Lib.Configs import FontFamily
 from Lib.Configs import NormalFont
 from Lib.Configs import read_default_yaml
@@ -172,27 +173,34 @@ def _spawn_info_widget(server_info: ServerInfo, host: str, port: int, *, is_wind
     image_label.setFixedSize(QSize(64, 64))
     root_layout.addWidget(image_label)
 
+    layout = QHBoxLayout()
+    layout.setContentsMargins(0, 0, 0, 0)
+    root_layout.addLayout(layout)
+
     desc_layout = QVBoxLayout()
     desc_layout.setContentsMargins(0, 0, 0, 0)
-    root_layout.addLayout(desc_layout)
-
-    state_layout = QHBoxLayout()
-    state_layout.setContentsMargins(0, 0, 0, 0)
-    desc_layout.addLayout(state_layout)
+    layout.addLayout(desc_layout)
 
     version_label = QLabel()
     version_label.setText(server_info.version.name)
     version_label.setAlignment(Qt.AlignLeft)
-    state_layout.addWidget(version_label)
+    desc_layout.addWidget(version_label)
+
+    desc_label = QLabel()
+    desc_html = server_info.description.to_html()
+    desc_html = "<span>" + desc_html.replace('\n', "<br/>") + "</span>"
+    desc_label.setText(desc_html)
+    desc_layout.addWidget(desc_label)
+    layout.setSpacing(0)
 
     host_port_label = QLabel()
     host_port_label.setText(f"{host}:{port}")
     host_port_label.setAlignment(Qt.AlignCenter)
-    state_layout.addWidget(host_port_label)
+    layout.addWidget(host_port_label)
 
-    player_layout = QHBoxLayout()
+    player_layout = QVBoxLayout()
     player_layout.setContentsMargins(0, 0, 0, 0)
-    state_layout.addLayout(player_layout)
+    layout.addLayout(player_layout)
 
     player_label = QLabel()
     player_label.setText(f"{server_info.players.online}/{server_info.players.max}")
@@ -234,33 +242,11 @@ def _spawn_info_widget(server_info: ServerInfo, host: str, port: int, *, is_wind
         msg_box.exec()
 
     player_list_button = QPushButton()
-    player_list_button.setStyleSheet(
-        "QPushButton{border: 1px solid gray;"
-        "background-color: rgb(230, 230, 230);"
-        "padding: 4px;}"
-    )
     player_list_button.setCursor(Qt.CursorShape.PointingHandCursor)
     player_list_button.setText("玩家列表")
     # noinspection PyUnresolvedReferences
     player_list_button.clicked.connect(_show_player_list)
     player_layout.addWidget(player_list_button)
-
-    desc_label = QLabel()
-
-    desc_html = server_info.description.to_html()
-    desc_html = _html_add_background_color(
-        (255, 255, 255),
-        (220, 220, 220),
-        desc_html
-    )
-    desc_html = _html_add_background_color(
-        (255, 255, 85),
-        (220, 220, 220),
-        desc_html
-    )
-    desc_html = "<span>" + desc_html.replace('\n', "<br/>") + "</span>"
-    desc_label.setText(desc_html)
-    desc_layout.addWidget(desc_label)
 
     return widget
 
@@ -316,7 +302,7 @@ class ServerScan(AbcUI):
 
             widget = _spawn_info_widget(server_info, e.host, e.port, is_window_top=self._is_window_top)
 
-            item.setSizeHint(QSize(0, 64 + 15))
+            item.setSizeHint(QSize(0, 64))
 
             self.show_result_list.addItem(item)
             self.show_result_list.setItemWidget(item, widget)
@@ -507,7 +493,6 @@ class ServerScan(AbcUI):
     @override
     def setupUi(self):
         self.widget = QWidget(self._parent)
-        self.widget.setFont(QFont(FontFamily, NormalFont))
 
         self.input_area = QWidget(self.widget)
         self.ip_input = QComboBox(self.input_area)
@@ -525,6 +510,17 @@ class ServerScan(AbcUI):
         self.progress_bar.setMinimum(0)
 
         self.show_result_list = QListWidget(self.widget)
+
+        self.widget.setStyleSheet(
+            "QWidget{"
+            "  background: url(./Textures/light_dirt_background.png);"
+            "  color: white;"
+            "};"
+        )
+        self.ip_input.setStyleSheet(
+            "color: default"
+        )
+        self.progress_bar.setAutoFillBackground(True)
 
         self.widget.setLayout(QVBoxLayout())
         self.widget.layout().setContentsMargins(0, 0, 0, 0)
@@ -544,6 +540,7 @@ class ServerScan(AbcUI):
         self.input_area.layout().addWidget(self.scan_button)
         self.input_area.layout().setStretch(1, 1)
 
+        self.reSetFont()
         self.reTranslate()
 
         # noinspection PyUnresolvedReferences
@@ -566,6 +563,14 @@ class ServerScan(AbcUI):
         self.show_log.setToolTip("扫描日志")
         self.show_log.logAlways([], "MSS(Minecraft Server Scanner)测试版\nMade By: C418____11\n")
         self.progress_bar.setToolTip("未开始扫描")
+
+    def reSetFont(self):
+        norm_font = QFont(FontFamily, NormalFont)
+        self.ip_input.setFont(norm_font)
+        self.ip_input.lineEdit().setFont(norm_font)
+        self.scan_button.setFont(norm_font)
+        self.result_count_label.setFont(norm_font)
+        self.show_log.setFont(QFont(FontFamily, SmallFont))
 
     @override
     def getMainWidget(self):
