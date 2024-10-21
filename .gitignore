@@ -1,11 +1,6 @@
-/.configs/
-/.venv312/
-/dist/
-/build/
-/.idea/
-/.record/
-/Releases Markdown/
+.configs
+venv312
+dist
+build
+.idea
 *.spec
-Build_EXE.txt
-*.ttf
-*.ink
