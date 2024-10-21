@@ -9,6 +9,7 @@ import re
 import subprocess
 import traceback
 from typing import Union
+import shutil
 
 from Cython.Build import cythonize
 from setuptools import setup
@@ -80,6 +81,7 @@ class PyToPyd:
         )
 
     def make_all(self, dir_path, sub_path: str = '', use_root: bool = False, ignore_err: bool = False):
+        dir_path = os.path.abspath(dir_path)
         root_dir = os.path.dirname(dir_path)
 
         for path in _get_all_extension_files(dir_path):
@@ -116,8 +118,9 @@ def _main():
     type_ = input("1: Pyd Default Features, 2: Pyd Other Features, 3: Print Depends, 4: Exit\n")
 
     compiler = PyToPyd()
-    base_path = '.'
-    # python_lib_path = r"D:/source_code/python/MinecrftServerScan/venv312/Lib"
+    base_path = '..'
+    lib_path = r"D:/source_code/python/MinecrftServerScan/venv312/Lib/site-packages"
+    stdlib_path = r"D:\app\Python\Python312\Lib"
 
     def a():
         compiler.make_all(fr"{base_path}\DefaultFeatures", use_root=True)
@@ -125,17 +128,17 @@ def _main():
         compiler.make_all(fr"{base_path}\UI")
         compiler.make_all(fr"{base_path}\MinecraftServerScanner")
 
-        # compiler.make(fr"{python_lib_path}\uuid.py")
-        # compiler.make(fr"{python_lib_path}\__future__.py")
-        # compiler.make_all(fr"{python_lib_path}\concurrent\futures")
-        # compiler.make_all(fr"{base_path}\.venv312\Lib\site-packages\func_timeout")
-        # compiler.make_all(fr"{python_lib_path}\json")
-        # shutil.copytree(
-        #     fr"{python_lib_path}\site-packages\PIL",
-        #     os.path.join(compiler.pyd_path, "PIL"),
-        #     ignore=lambda src, name: '__pycache__',
-        #     dirs_exist_ok=True
-        # )
+        compiler.make(fr"{stdlib_path}\uuid.py")
+        # compiler.make(fr"{lib_path}\__future__.py")
+        compiler.make_all(fr"{stdlib_path}\concurrent\futures")
+        compiler.make_all(fr"{lib_path}\func_timeout")
+        # compiler.make_all(fr"{lib_path}\json")
+        shutil.copytree(
+            fr"{lib_path}\PIL",
+            os.path.join(compiler.pyd_path, "PIL"),
+            ignore=lambda src, name: '__pycache__',
+            dirs_exist_ok=True
+        )
         _rename_all(compiler.pyd_path, r".cp312-win_amd64", r"")
 
     def b():
