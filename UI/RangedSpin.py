@@ -9,9 +9,9 @@ from typing import Any, Optional
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtWidgets import QSpinBox
-from PyQt5.QtWidgets import QHBoxLayout
 from PyQt5.QtWidgets import QAbstractSpinBox as ABCSpinBox
+from PyQt5.QtWidgets import QHBoxLayout
+from PyQt5.QtWidgets import QSpinBox
 from PyQt5.QtWidgets import QWidget
 
 from .tools import showException

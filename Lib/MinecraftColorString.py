@@ -6,10 +6,10 @@ __version__ = "0.0.2Dev"
 
 import sys
 from dataclasses import dataclass
-from typing import Self
-from typing import Optional
-from typing import TypeVar
 from numbers import Integral as Int
+from typing import Optional
+from typing import Self
+from typing import TypeVar
 
 ColorName2Code = {
     "black": "§0",

@@ -12,6 +12,7 @@ import colorama
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication
+from PyQt5.QtWidgets import QMainWindow
 from tqdm import tqdm
 
 import FeatureLoader
@@ -19,7 +20,6 @@ from Lib.Configs import BASE_PATH
 from Lib.Configs import init as init_configs
 from Lib.Configs import read_default_yaml
 from Lib.StdColor import ColorWrite
-from PyQt5.QtWidgets import QMainWindow
 from UI import RegisterUI
 from UI.Main import UiMain
 

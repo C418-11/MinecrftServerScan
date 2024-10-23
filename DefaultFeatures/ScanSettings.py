@@ -183,7 +183,7 @@ class ScanSettings(AbcUI):
         self.auto_scroll_check_box.setChecked(True)
 
         t = QHBoxLayout()
-        t.setContentsMargins(*[100]*4)
+        t.setContentsMargins(*[100] * 4)
         self.widget.setLayout(t)
 
         t = QVBoxLayout()
