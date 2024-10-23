@@ -22,6 +22,7 @@ from Lib.Configs import read_default_yaml
 from Lib.StdColor import ColorWrite
 from UI import RegisterUI
 from UI.Main import UiMain
+from UI.tools import getDefaultImage
 
 _load_other_futures = read_default_yaml(
     os.path.join(BASE_PATH, 'FuturesLoad.yaml'),
@@ -49,7 +50,20 @@ def main():
             traceback.print_exception(e)
 
     window = QMainWindow()
-    window.setWindowIcon(QIcon("./Textures/icon.png"))
+
+    # noinspection SpellCheckingInspection
+    default_data = "Qk1GAAAAAAAAADYAAAAoAAAAAgAAAAIAAAABABgAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAA/wD/AAAAAAAAAAD/AP8AAA=="
+    window.setWindowIcon(
+        QIcon(
+            getDefaultImage(
+                "./Textures/icon.png",
+                default_data
+            ).scaled(
+                16, 16,
+                Qt.KeepAspectRatio
+            )
+        )
+    )
     ui = UiMain(window)
     ui.setupUi()
 

@@ -4,24 +4,21 @@
 __author__ = "C418____11 <553515788@qq.com>"
 __version__ = "0.0.3Dev"
 
-import base64
 import json
 import os
 import socket
 import sys
-
-import colorama
 import threading
 from typing import Callable
 from typing import override
-from Lib.StdColor import ColorWrite
+
+import colorama
 from PIL import Image
 from PyQt5.QtCore import QModelIndex
 from PyQt5.QtCore import QSize
 from PyQt5.QtCore import Qt
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtGui import QFont
-from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtWidgets import QComboBox
 from PyQt5.QtWidgets import QFileDialog
@@ -37,12 +34,13 @@ from PyQt5.QtWidgets import QVBoxLayout
 from PyQt5.QtWidgets import QWidget
 
 from Lib.Configs import BASE_PATH
-from Lib.Configs import SmallFont
 from Lib.Configs import FontFamily
 from Lib.Configs import NormalFont
+from Lib.Configs import SmallFont
 from Lib.Configs import read_default_yaml
 from Lib.MinecraftColorString import ColorString
 from Lib.ParseMCServerInfo import ServerInfo
+from Lib.StdColor import ColorWrite
 from MinecraftServerScanner.Events import ABCEvent
 from MinecraftServerScanner.Events import FinishEvent
 from MinecraftServerScanner.Events import StartEvent
@@ -54,6 +52,7 @@ from UI.ABC import AbcUI
 from UI.LogList import LogLevel
 from UI.LogList import LogListWidget
 from UI.RegisterUI import register
+from UI.tools import getDefaultImage
 from UI.tools import showException
 
 # noinspection SpellCheckingInspection
@@ -151,61 +150,61 @@ def _spawn_info_widget(server_info: ServerInfo, host: str, port: int, *, is_wind
     widget.setToolTip("双击显示详细信息")
     root_layout = QHBoxLayout()
     root_layout.setContentsMargins(0, 0, 0, 0)
+    root_layout.setSpacing(0)
     widget.setLayout(root_layout)
 
     icon_path = _config_file.get_default("DefaultServerIcon", None)
-    if icon_path and os.path.exists(icon_path):
-        pixmap = QPixmap(icon_path)
-    else:
-        pixmap = QPixmap()
-        # noinspection SpellCheckingInspection
-        raw_base64 = "Qk1GAAAAAAAAADYAAAAoAAAAAgAAAAIAAAABABgAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAA/wD/AAAAAAAAAAD/AP8AAA=="
-        pixmap.loadFromData(base64.b64decode(raw_base64))
-        pixmap = pixmap.scaled(64, 64, Qt.KeepAspectRatio)
-
+    # noinspection SpellCheckingInspection
+    default_data = "Qk1GAAAAAAAAADYAAAAoAAAAAgAAAAIAAAABABgAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAA/wD/AAAAAAAAAAD/AP8AAA=="
+    pixmap = getDefaultImage(
+        icon_path,
+        default_data
+    )
     if server_info.favicon is not None:
         image_bytes = server_info.favicon.to_bytes()
         pixmap.loadFromData(image_bytes)
 
     image_label = QLabel()
-    pixmap = pixmap.scaled(64, 64, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+    pixmap = pixmap.scaled(64, 64, Qt.KeepAspectRatio)
     image_label.setPixmap(pixmap)
     image_label.setFixedSize(QSize(64, 64))
     root_layout.addWidget(image_label)
 
-    layout = QHBoxLayout()
-    layout.setContentsMargins(0, 0, 0, 0)
-    root_layout.addLayout(layout)
+    details_layout = QVBoxLayout()
+    details_layout.setContentsMargins(0, 0, 0, 0)
+    details_layout.setSpacing(0)
+    root_layout.addLayout(details_layout)
 
-    desc_layout = QVBoxLayout()
-    desc_layout.setContentsMargins(0, 0, 0, 0)
-    layout.addLayout(desc_layout)
+    info_layout = QHBoxLayout()
+    info_layout.setContentsMargins(0, 0, 0, 0)
+    info_layout.setSpacing(0)
+    details_layout.addLayout(info_layout)
 
     version_label = QLabel()
     version_label.setText(server_info.version.name)
     version_label.setAlignment(Qt.AlignLeft)
-    desc_layout.addWidget(version_label)
+    info_layout.addWidget(version_label)
+
+    host_port_label = QLabel()
+    host_port_label.setText(f"{host}:{port}")
+    host_port_label.setAlignment(Qt.AlignCenter)
+    info_layout.addWidget(host_port_label)
+
+    player_label = QLabel()
+    player_label.setText(f"{server_info.players.online}/{server_info.players.max}")
+    player_label.setAlignment(Qt.AlignRight)
+    info_layout.addWidget(player_label)
+
+    desc_layout = QVBoxLayout()
+    desc_layout.setContentsMargins(0, 0, 0, 0)
+    desc_layout.setSpacing(0)
+    details_layout.addLayout(desc_layout)
 
     desc_label = QLabel()
     desc_html = server_info.description.to_html()
     desc_html = "<span>" + desc_html.replace('\n', "<br/>") + "</span>"
     desc_label.setText(desc_html)
     desc_layout.addWidget(desc_label)
-    layout.setSpacing(0)
-
-    host_port_label = QLabel()
-    host_port_label.setText(f"{host}:{port}")
-    host_port_label.setAlignment(Qt.AlignCenter)
-    layout.addWidget(host_port_label)
-
-    player_layout = QVBoxLayout()
-    player_layout.setContentsMargins(0, 0, 0, 0)
-    layout.addLayout(player_layout)
-
-    player_label = QLabel()
-    player_label.setText(f"{server_info.players.online}/{server_info.players.max}")
-    player_label.setAlignment(Qt.AlignRight)
-    player_layout.addWidget(player_label)
 
     @showException
     def _show_player_list(*_):
@@ -246,7 +245,7 @@ def _spawn_info_widget(server_info: ServerInfo, host: str, port: int, *, is_wind
     player_list_button.setText("玩家列表")
     # noinspection PyUnresolvedReferences
     player_list_button.clicked.connect(_show_player_list)
-    player_layout.addWidget(player_list_button)
+    desc_layout.addWidget(player_list_button)
 
     return widget
 
@@ -511,16 +510,16 @@ class ServerScan(AbcUI):
 
         self.show_result_list = QListWidget(self.widget)
 
-        self.widget.setStyleSheet(
-            "QWidget{"
-            "  background: url(./Textures/light_dirt_background.png);"
-            "  color: white;"
-            "};"
-        )
-        self.ip_input.setStyleSheet(
-            "color: default"
-        )
-        self.progress_bar.setAutoFillBackground(True)
+        if os.path.exists("./Textures/light_dirt_background.png"):
+            self.widget.setStyleSheet(
+                "QWidget{"
+                "  background: url(./Textures/light_dirt_background.png);"
+                "  color: white;"
+                "};"
+            )
+            self.ip_input.setStyleSheet(
+                "color: default"
+            )
 
         self.widget.setLayout(QVBoxLayout())
         self.widget.layout().setContentsMargins(0, 0, 0, 0)

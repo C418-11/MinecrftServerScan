@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # cython: language_level = 3
-
+import base64
 import os
-import sys
 import traceback
 from functools import wraps
+from typing import Optional
 from typing import Union
 
 from PyQt5.QtCore import QFileInfo
@@ -26,7 +26,6 @@ def showException(func):
             traceback.print_exception(err)
             if type(err) is KeyboardInterrupt:
                 raise
-            sys.exit(1)
 
     return wrapper
 
@@ -65,7 +64,7 @@ def elidedText(text, font: Union[QFont, QFontMetrics, str], max_width, mode=Qt.E
     return fm.elidedText(text, mode, max_width)
 
 
-def getFileImage(
+def getFileIcon(
         file_path,
         size: Union[QSize, None],
         *,
@@ -92,7 +91,7 @@ def getFileImage(
     return pixmap
 
 
-def add_line_breaks(text: str, width: int, font_metrics: QFontMetrics):
+def addLineBreaks(text: str, width: int, font_metrics: QFontMetrics):
     # 获取文本宽度
     def get_width(_text):
         return font_metrics.size(Qt.TextExpandTabs, _text).width()
@@ -116,4 +115,29 @@ def add_line_breaks(text: str, width: int, font_metrics: QFontMetrics):
     return result
 
 
-__all__ = ("showException", "fontFromPath", "ToFontMetrics", "elidedText", "getFileImage", "add_line_breaks")
+def getDefaultImage(file_path: Optional[str], default: Optional[str | QPixmap]) -> Optional[QPixmap]:
+    if file_path is None:
+        pass
+    elif os.path.exists(file_path):
+        return QPixmap(file_path)
+
+    if default is None:
+        return default
+    if isinstance(default, QPixmap):
+        return default
+    if os.path.exists(default):
+        return QPixmap(file_path)
+    pixmap = QPixmap()
+    pixmap.loadFromData(base64.b64decode(default))
+    return pixmap
+
+
+__all__ = (
+    "showException",
+    "fontFromPath",
+    "ToFontMetrics",
+    "elidedText",
+    "getFileIcon",
+    "addLineBreaks",
+    "getDefaultImage"
+)
