@@ -131,7 +131,7 @@ class Favicon:
         return self._raw_data
 
     def to_bytes(self) -> bytes:
-        return base64.b64decode(self._raw_data.split(',')[1])
+        return base64.b64decode(self._raw_data)
 
     def to_file(self, path: str):
         with open(path, "wb") as f:
@@ -177,7 +177,14 @@ class ServerInfo(ForInRepr):
 
     @property
     def favicon(self) -> Favicon | None:
-        data = self._raw_data.get("favicon")
+        data: str = self._raw_data.get("favicon")
         if data is None:
             return None
-        return Favicon(data)
+
+        if ',' not in data:
+            return None
+        only_data = data.split(',')[1]
+        if not only_data:
+            return None
+
+        return Favicon(only_data)
