@@ -158,7 +158,7 @@ class ServerInfo(ForInRepr):
 
     @property
     def description(self) -> ColorString:
-        return ColorString.from_dict(self._raw_data["description"])
+        return ColorString.from_obj(self._raw_data["description"])
 
     @property
     def players(self) -> Players:

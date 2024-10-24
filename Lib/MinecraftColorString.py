@@ -8,6 +8,7 @@ import sys
 from dataclasses import dataclass
 from numbers import Integral as Int
 from typing import Optional
+from typing import Any
 from typing import Self
 from typing import TypeVar
 
@@ -271,7 +272,7 @@ class ColorString:
         return self._raw_data.copy()
 
     @classmethod
-    def from_dict(cls, json_dict: dict) -> Self:
+    def from_obj(cls, json_dict: dict | str) -> Self:
         class ParseType:
             Extra = "extra"
             Text = "text"
@@ -296,7 +297,7 @@ class ColorString:
 
             return rets
 
-        def _parse_text(data: dict) -> ColorStringStructure:
+        def _parse_text(data: dict | Any) -> ColorStringStructure:
             if type(data) is not dict:
                 data = {"text": str(data)}
 
