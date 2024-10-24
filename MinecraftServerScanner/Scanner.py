@@ -2,7 +2,7 @@
 # cython: language_level = 3
 
 __author__ = "C418____11 <553515788@qq.com>"
-__version__ = "0.0.4Dev"
+__version__ = "0.0.5Dev"
 
 import socket
 import struct
@@ -28,6 +28,36 @@ def _make_packet(data: bytes) -> bytes:
     return struct.pack(">I", len(data)) + data
 
 
+def analyze_varint(data) -> int:
+    result = 0
+    shift = 0
+    for raw_byte in data:
+        val_byte = raw_byte & 0x7F
+        result |= val_byte << shift
+        if raw_byte & 0x80 == 0:
+            break
+        shift += 7
+    return result
+
+
+def read_packet(client: socket.socket) -> bytes:
+    """读取包"""
+    # 读取数据包长度
+    length = analyze_varint(client.recv(2))
+    # 获取足够长的数据
+    return _recv_all(length, client)
+
+
+def _recv_all(length: int, client: socket.socket):
+    data = b""
+    while len(data) < length:
+        more = client.recv(length - len(data))
+        if not more:
+            raise EOFError
+        data += more
+    return data
+
+
 class Scanner:
     protocol_version = 65
 
@@ -38,7 +68,6 @@ class Scanner:
             /,
             callback: Callable[[ABCEvent], Any],
             *,
-            socket_reader: Callable[[socket.socket], bytes],
             max_threads: int | None = 1,
     ) -> None:
 
@@ -47,7 +76,6 @@ class Scanner:
         :param port: 目标端口集合
         :param callback: 回调 用于处理扫描结果
         :param max_threads: 最大同时存在的线程数 为None时表示不限制
-        :param socket_reader: 读取数据包并返回读取到的数据
         """
 
         if max_threads is not None and max_threads < 1:
@@ -63,8 +91,6 @@ class Scanner:
         self.finished_ports: set[int] = set()
         self.error_ports: set[int] = set()
         self.update_ports_lock = threading.Lock()
-
-        self._socket_reader = socket_reader
 
         self._max_threads = max_threads
 
@@ -98,7 +124,7 @@ class Scanner:
 
         client.sendall(self._make_handshake_packet(port))
         client.sendall(_make_packet(b'\x00'))
-        raw_data = self._socket_reader(client)
+        raw_data = read_packet(client)
 
         self._callback(ThreadFinishEvent(thread_id=thread_id, host=self._host, port=port, result=raw_data))
         with self.update_ports_lock:

@@ -2,7 +2,7 @@
 # cython: language_level = 3
 
 __author__ = "C418____11 <553515788@qq.com>"
-__version__ = "0.0.3Dev"
+__version__ = "0.0.4Dev"
 
 import json
 import os
@@ -14,7 +14,6 @@ from typing import override
 
 import colorama
 from PIL import Image
-from PyQt5.QtCore import QModelIndex
 from PyQt5.QtCore import QSize
 from PyQt5.QtCore import Qt
 from PyQt5.QtCore import pyqtSignal
@@ -92,36 +91,6 @@ _config_file = read_default_yaml(
             # "us-sjc-bgp-2.openfrp.top"
         ]
     })
-
-
-def analyze_varint(data) -> int:
-    result = 0
-    shift = 0
-    for raw_byte in data:
-        val_byte = raw_byte & 0x7F
-        result |= val_byte << shift
-        if raw_byte & 0x80 == 0:
-            break
-        shift += 7
-    return result
-
-
-def _read_packet(client: socket.socket) -> bytes:
-    """读取包"""
-    # 读取数据包长度
-    length = analyze_varint(client.recv(2))
-    # 获取足够长的数据
-    return _recv_all(length, client)
-
-
-def _recv_all(length: int, client: socket.socket):
-    data = b""
-    while len(data) < length:
-        more = client.recv(length - len(data))
-        if not more:
-            raise EOFError
-        data += more
-    return data
 
 
 class CallbackPushButton(QPushButton):
@@ -275,8 +244,6 @@ class ServerScan(AbcUI):
         self.scan_connect_timeout = 0.9
         self.scan_parse_timeout = 1
 
-        self.result_ls: list[ServerInfo] = []
-
     def _is_window_top(self) -> bool:
         flags = self.widget.window().windowFlags() & Qt.WindowType.WindowStaysOnTopHint
         return flags == Qt.WindowType.WindowStaysOnTopHint
@@ -293,8 +260,7 @@ class ServerScan(AbcUI):
             self.log([e.port], f"存在服务器", LogLevel.DEBUG)
 
             server_info = ServerInfo(parsed)
-            self.result_ls.append(server_info)
-            self.result_count_label.setText(f"扫描结果: {len(self.result_ls)}")
+            self.result_count_label.setText(f"扫描结果: {self.show_result_list.count()}")
 
             item = QListWidgetItem()
             item.setData(Qt.UserRole, (server_info, e.host, e.port))
@@ -319,8 +285,6 @@ class ServerScan(AbcUI):
             self.scan_button.setEnabled(False)
             self.ip_input.setEnabled(False)
 
-            self.result_ls.clear()
-
             self.show_result_list.clear()
 
             self.progress_bar.setMinimum(0)
@@ -338,7 +302,7 @@ class ServerScan(AbcUI):
             message += f"在{len(e.error_ports)}个端口上发生错误\n"
             message += f"总计用时{e.used_time_ns / 1000000000:.2f}秒"
             self.log([], message, LogLevel.INFO)
-            self.result_count_label.setText(f"扫描结果: {len(self.result_ls)}")
+            self.result_count_label.setText(f"扫描结果: {self.show_result_list.count()}")
             self.progress_bar.setValue(self.progress_bar.maximum())
             self.progress_bar.setToolTip(f"扫描结束 共计{len(e.all_ports)}个端口")
             self.scan_button.setEnabled(True)
@@ -380,7 +344,6 @@ class ServerScan(AbcUI):
             self.ip_input.currentText(),
             set(range(self.start_port, self.end_port + 1)),
             _emit,
-            socket_reader=_read_packet,
             max_threads=self.max_threads,
         )
 
@@ -392,11 +355,7 @@ class ServerScan(AbcUI):
 
     @showException
     def _showServerDetails(self, item: QListWidgetItem):
-        index = self.show_result_list.indexFromItem(item)
-        index: QModelIndex
-        server_info = self.result_ls[index.row()]
-
-        _, host, port = item.data(Qt.UserRole)
+        server_info, host, port = item.data(Qt.UserRole)
 
         html_space = "&nbsp;"
 
@@ -467,7 +426,7 @@ class ServerScan(AbcUI):
                 None,
                 "保存图标",
                 base_filename,
-                "PNG图片 (*.png);;JPG图片 (*.jpg)"
+                "PNG图片 (*.png);;JPG图片 (*.jpg);;所有文件 (*)"
 
             )[0]
 

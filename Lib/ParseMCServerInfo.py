@@ -29,31 +29,31 @@ class ForInRepr(ABC):
 
 class Players(ForInRepr):
     class Sample(ForInRepr):
-        def __init__(self, raw_dict: dict):
-            self._raw_dict = raw_dict
+        def __init__(self, raw_data: dict):
+            self._raw_data = raw_data
 
         @property
         def id(self) -> str:
-            return self._raw_dict["id"]
+            return self._raw_data["id"]
 
         @property
         def name(self) -> ColorString:
-            return ColorString.from_string(self._raw_dict["name"])
+            return ColorString.from_string(self._raw_data["name"])
 
-    def __init__(self, raw_dict: dict):
-        self._raw_dict = raw_dict
+    def __init__(self, raw_data: dict):
+        self._raw_data = raw_data
 
     @property
     def max(self) -> int:
-        return self._raw_dict["max"]
+        return self._raw_data["max"]
 
     @property
     def online(self) -> int:
-        return self._raw_dict["online"]
+        return self._raw_data["online"]
 
     @property
     def sample(self) -> list[Sample] | None:
-        data = self._raw_dict.get("sample")
+        data = self._raw_data.get("sample")
         if data is None:
             return None
         return [self.Sample(x) for x in data]
@@ -61,33 +61,33 @@ class Players(ForInRepr):
 
 class ForgeData(ForInRepr):
     class Channel(ForInRepr):
-        def __init__(self, raw_dict: dict):
-            self._raw_dict = raw_dict
+        def __init__(self, raw_data: dict):
+            self._raw_data = raw_data
 
         @property
         def res(self) -> str:
-            return self._raw_dict["res"]
+            return self._raw_data["res"]
 
         @property
         def version(self) -> str:
-            return self._raw_dict["version"]
+            return self._raw_data["version"]
 
         @property
         def required(self) -> bool:
-            return self._raw_dict["required"]
+            return self._raw_data["required"]
 
     class Mod(ForInRepr):
-        def __init__(self, raw_dict: dict):
-            self._raw_dict = raw_dict
+        def __init__(self, raw_data: dict):
+            self._raw_data = raw_data
 
         @property
         def modId(self) -> str:
-            return self._raw_dict["modId"]
+            return self._raw_data["modId"]
 
         # noinspection SpellCheckingInspection
         @property
         def modmarker(self) -> str:
-            return self._raw_dict["modmarker"]
+            return self._raw_data["modmarker"]
 
     def __init__(self, raw_dict: dict):
         self._raw_dict = raw_dict
@@ -110,28 +110,28 @@ class ForgeData(ForInRepr):
 
 
 class Version(ForInRepr):
-    def __init__(self, raw_dict: dict):
-        self._raw_dict = raw_dict
+    def __init__(self, raw_data: dict):
+        self._raw_data = raw_data
 
     @property
     def name(self) -> str:
-        return self._raw_dict["name"]
+        return self._raw_data["name"]
 
     @property
     def protocol(self) -> int:
-        return self._raw_dict["protocol"]
+        return self._raw_data["protocol"]
 
 
 class Favicon:
-    def __init__(self, raw_string: str):
-        self._raw_string = raw_string
+    def __init__(self, raw_data: str):
+        self._raw_data = raw_data
 
     @property
     def raw(self) -> str:
-        return self._raw_string
+        return self._raw_data
 
     def to_bytes(self) -> bytes:
-        return base64.b64decode(self._raw_string.split(',')[1])
+        return base64.b64decode(self._raw_data.split(',')[1])
 
     def to_file(self, path: str):
         with open(path, "wb") as f:
@@ -142,38 +142,42 @@ class Favicon:
         return Image.open(io.BytesIO(self.to_bytes()))
 
     def __repr__(self):
-        return f"<Favicon: {self._raw_string}>"
+        return f"<Favicon: {self._raw_data}>"
 
     def __str__(self):
-        return self._raw_string
+        return self._raw_data
 
 
 class ServerInfo(ForInRepr):
-    def __init__(self, raw_dict: dict):
-        self._raw_dict = raw_dict
+    def __init__(self, raw_data: dict):
+        self._raw_data = raw_data
+
+    @property
+    def raw_data(self):
+        return self._raw_data
 
     @property
     def description(self) -> ColorString:
-        return ColorString.from_dict(self._raw_dict["description"])
+        return ColorString.from_dict(self._raw_data["description"])
 
     @property
     def players(self) -> Players:
-        return Players(self._raw_dict["players"])
+        return Players(self._raw_data["players"])
 
     @property
     def version(self) -> Version:
-        return Version(self._raw_dict["version"])
+        return Version(self._raw_data["version"])
 
     @property
     def forgeData(self) -> ForgeData | None:
-        data = self._raw_dict.get("forgeData")
+        data = self._raw_data.get("forgeData")
         if data is None:
             return None
-        return ForgeData(self._raw_dict["forgeData"])
+        return ForgeData(self._raw_data["forgeData"])
 
     @property
     def favicon(self) -> Favicon | None:
-        data = self._raw_dict.get("favicon")
+        data = self._raw_data.get("favicon")
         if data is None:
             return None
         return Favicon(data)

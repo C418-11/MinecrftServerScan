@@ -2,12 +2,17 @@
 # cython: language_level = 3
 
 __author__ = "C418____11 <553515788@qq.com>"
-__version__ = "0.0.1Dev"
+__version__ = "0.0.2Dev"
 
-from typing import Union
+import json
+import os
+from typing import Union, override, Any
 
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtWidgets import QCheckBox
+from PyQt5.QtWidgets import QApplication
+from PyQt5.QtWidgets import QFileDialog
+from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtWidgets import QComboBox
 from PyQt5.QtWidgets import QDoubleSpinBox
 from PyQt5.QtWidgets import QHBoxLayout
@@ -21,10 +26,14 @@ from PyQt5.QtWidgets import QTabWidget
 from PyQt5.QtWidgets import QVBoxLayout
 from PyQt5.QtWidgets import QWidget
 
-from MinecraftServerScanner.Events import ABCEvent, StartEvent, FinishEvent
+from Lib.ParseMCServerInfo import ServerInfo
+from MinecraftServerScanner.Events import ABCEvent
+from MinecraftServerScanner.Events import StartEvent
+from MinecraftServerScanner.Events import FinishEvent
 from UI.RangedSpin import RangedSpinBox
 from UI.Main import UiMain
 from DefaultFeatures.ScanServer import ServerScan
+from DefaultFeatures.ScanServer import _spawn_info_widget
 from UI.ABC import AbcUI
 from UI.LogList import LogLevel
 from UI.LogList import NonUsable
@@ -60,6 +69,9 @@ class ScanSettings(AbcUI):
 
         self.stop_scan_btn: QPushButton | None = None
         self.clean_log_btn: QPushButton | None = None
+        self.import_export_label: QLabel | None = None
+        self.import_btn: QPushButton | None = None
+        self.export_btn: QPushButton | None = None
         self.auto_scroll_check_box: QCheckBox | None = None
 
     @showException
@@ -129,6 +141,107 @@ class ScanSettings(AbcUI):
         self.target_page.start_port = minimum
         self.target_page.end_port = maximum
 
+    @showException
+    def _on_import(self, *_):
+        self.import_btn.setEnabled(False)
+        file_path, _ = QFileDialog.getOpenFileName(
+            caption="导入",
+            filter="All Files (*);;Json Files (*.json);;Text Files (*.txt)",
+            initialFilter="Json Files (*.json)",
+        )
+
+        if not file_path:
+            self.import_btn.setEnabled(True)
+            return
+
+        try:
+            with open(file_path, mode="r", encoding="utf-8") as f:
+                try:
+                    servers = json.load(f)
+                except json.JSONDecodeError:
+                    QMessageBox.critical(self.widget, "警告", "损坏的文件")
+                    self.import_btn.setEnabled(True)
+                    return
+        except Exception as e:
+            QMessageBox.critical(self.widget, "警告", f"导入失败\n{type(e)}:\n{e}")
+            self.import_btn.setEnabled(True)
+            raise
+
+        if not isinstance(servers, list):
+            QMessageBox.critical(self.widget, "警告", "损坏的文件")
+            self.import_btn.setEnabled(True)
+            return
+
+        widgets: list[QListWidgetItem] = []
+        processed_server_ls: list[tuple[ServerInfo, str, int]] = []
+        for data in servers:
+            server_info = ServerInfo(data["data"])
+            host = data["host"]
+            port = data["port"]
+            processed_server_ls.append((server_info, host, port))
+
+            try:
+                # noinspection PyProtectedMember
+                widgets.append(_spawn_info_widget(
+                    server_info, host, port,
+                    is_window_top=self.target_page._is_window_top
+                ))
+            except Exception as e:
+                QMessageBox.critical(self.widget, "警告", f"导入失败\n{type(e)}:\n{e}")
+                self.import_btn.setEnabled(True)
+                return
+            QApplication.processEvents()
+
+        result_list = self.target_page.show_result_list
+        result_list.clear()
+        for widget, (server_info, host, port) in zip(widgets, processed_server_ls):
+            item = QListWidgetItem()
+            item.setData(Qt.UserRole, (server_info, host, port))
+            item.setSizeHint(QSize(0, 64))
+
+            result_list.addItem(item)
+            result_list.setItemWidget(item, widget)
+            QApplication.processEvents()
+
+    @showException
+    def _on_export(self, *_):
+        try:
+            if not os.path.exists("./.export"):
+                os.makedirs("./.export", exist_ok=True)
+        except Exception as e:
+            QMessageBox.critical(self.widget, "提示", f"未能创建输出文件夹\n{type(e)}:\n{e}")
+
+        file_path, _ = QFileDialog.getSaveFileName(
+            caption="导出",
+            directory="./.export/MinecraftServers.json",
+            filter="All Files (*);;Json Files (*.json);;Text Files (*.txt)",
+            initialFilter="Json Files (*.json)",
+        )
+        result_list = self.target_page.show_result_list
+
+        if not file_path:
+            return
+
+        results: list[dict[str, Any]] = []
+        for x in range(result_list.count()):
+            data = result_list.item(x).data(Qt.UserRole)
+            server_info: ServerInfo = data[0]
+            host: str = data[1]
+            port: int = data[2]
+            results.append({
+                "host": host,
+                "port": port,
+                "data": server_info.raw_data
+            })
+
+        try:
+            with open(file_path, mode="w", encoding="utf-8") as f:
+                json.dump(results, f, sort_keys=True, indent=2)
+        except Exception as e:
+            QMessageBox.critical(self.widget, "警告", f"导出失败\n{type(e)}:\n{e}")
+            raise
+
+    @override
     def setupUi(self):
         self.widget = QWidget()
         self.target_page = [x for x in self._main_ui.top_tabs if isinstance(x, ServerScan)][0]
@@ -179,6 +292,10 @@ class ScanSettings(AbcUI):
         self.stop_scan_btn = QPushButton(self.widget)
         self.stop_scan_btn.setEnabled(False)
         self.clean_log_btn = QPushButton(self.widget)
+        self.import_export_label = QLabel(self.widget)
+        self.import_export_label.setAlignment(Qt.AlignCenter)
+        self.import_btn = QPushButton(self.widget)
+        self.export_btn = QPushButton(self.widget)
         self.auto_scroll_check_box = QCheckBox(self.widget)
         self.auto_scroll_check_box.setChecked(True)
 
@@ -214,6 +331,11 @@ class ScanSettings(AbcUI):
         self.widget.layout().addLayout(t)
         t.addWidget(self.stop_scan_btn)
         t.addWidget(self.clean_log_btn)
+        t.addWidget(self.import_export_label)
+        u = QHBoxLayout()
+        t.addLayout(u)
+        u.addWidget(self.import_btn)
+        u.addWidget(self.export_btn)
         t.addWidget(self.auto_scroll_check_box)
 
         self.widget.layout().setStretch(0, 1)
@@ -240,8 +362,13 @@ class ScanSettings(AbcUI):
         # noinspection PyUnresolvedReferences
         self.clean_log_btn.clicked.connect(self._on_clear_btn)
         # noinspection PyUnresolvedReferences
+        self.import_btn.clicked.connect(self._on_import)
+        # noinspection PyUnresolvedReferences
+        self.export_btn.clicked.connect(self._on_export)
+        # noinspection PyUnresolvedReferences
         self.auto_scroll_check_box.stateChanged.connect(self._auto_scroll_type_changed)
 
+    @override
     def reTranslate(self):
         self.log_level_label.setText("启用的日志级别")
         self.enable_log_level_list.setToolTip("双击删除")
@@ -263,12 +390,19 @@ class ScanSettings(AbcUI):
         self.stop_scan_btn.setToolTip("终止当前扫描任务")
         self.clean_log_btn.setText("清空日志")
         self.clean_log_btn.setToolTip("清空现存日志")
-
+        self.import_export_label.setText("导入/导出服务器列表")
+        self.import_export_label.setMaximumHeight(self.import_export_label.sizeHint().height())
+        self.import_btn.setText("导入")
+        self.import_btn.setToolTip("*导入* 服务器列表")
+        self.export_btn.setText("导出")
+        self.export_btn.setToolTip("*导出* 服务器列表")
         self.auto_scroll_check_box.setText("日志自动滚动")
         self.auto_scroll_check_box.setToolTip("切换日志自动滚动")
 
+    @override
     def getMainWidget(self):
         return self.widget
 
+    @override
     def getTagName(self):
         return "扫描器高级选项"
