@@ -41,7 +41,7 @@ def _load(name: str, import_path: str):
         _show_details(module)
         return module
     except ImportError as err:
-        traceback.print_exception(err)
+        traceback.print_exception(err, file=_red_write)
         c = re.compile(r"No\smodule\snamed\s'([^']+)'")
         err_module = c.findall(str(err))
 
@@ -62,7 +62,7 @@ def _load(name: str, import_path: str):
         print(f"Unable to load Feature '{name}', dependencies may not be installed: '{err_module}'", file=_red_write)
         return None
     except Exception as err:
-        traceback.print_exception(err)
+        traceback.print_exception(err, file=_red_write)
         print("Unable to load Feature:", name, " reason:", err, file=_red_write)
         return None
 
