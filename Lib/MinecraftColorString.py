@@ -8,7 +8,6 @@ import sys
 from dataclasses import dataclass
 from numbers import Integral as Int
 from typing import Optional
-from typing import Any
 from typing import Self
 from typing import TypeVar
 
@@ -287,20 +286,20 @@ class ColorString:
             parse_type = ParseType.Text
             json_dict["text"] = json_dict["translate"]
         elif type(json_dict) is str:
-            parse_type = ParseType.Text
-            json_dict = {"text": json_dict}
+            parse_type = ParseType.Extra
+            json_dict = cls.from_string(json_dict).to_dict()
 
-        def _parse_extra(data: dict) -> list[ColorStringStructure]:
-            rets = []
+        def _parse_extra(data: dict) -> Self:
+            results: list[str] = []
             for item in data["extra"]:
-                rets.append(_parse_text(item))
+                obj: Self = _parse_text(item)
+                results.extend(obj.to_string())
 
-            return rets
+            return cls.from_string(''.join(results))
 
-        def _parse_text(data: dict | Any) -> ColorStringStructure:
-            if type(data) is not dict:
+        def _parse_text(data: dict | str) -> Self:
+            if not isinstance(data, dict):
                 data = {"text": str(data)}
-
             string = data["text"]
 
             ctrls = []
@@ -317,18 +316,17 @@ class ColorString:
                 else:
                     rgb_color = Name2RGB[color]
 
-            return ColorStringStructure(text=string, color=rgb_color, ctrls=ctrls)
+            # 将json dict处理为字符串用于递归处理"text"内文本
+            processed_string = cls([ColorStringStructure(text=string, color=rgb_color, ctrls=ctrls)]).to_string()
+            return cls.from_string(processed_string)
 
         if parse_type == ParseType.Extra:
-            result = _parse_extra(json_dict)
-
+            return _parse_extra(json_dict)
         elif parse_type == ParseType.Text:
-            result = [_parse_text(json_dict)]
+            return _parse_text(json_dict)
         else:
             print(json_dict)
             raise ValueError("Unknown parse type")
-
-        return cls(result)
 
     @classmethod
     def from_string(cls, string: str) -> Self:
