@@ -6,6 +6,7 @@ __version__ = "0.0.2Dev"
 
 import json
 import os
+import traceback
 from typing import Union, override, Any
 
 from PyQt5.QtCore import Qt, QSize
@@ -146,6 +147,7 @@ class ScanSettings(AbcUI):
         self.import_btn.setEnabled(False)
         file_path, _ = QFileDialog.getOpenFileName(
             caption="导入",
+            directory="./.export/",
             filter="All Files (*);;Json Files (*.json);;Text Files (*.txt)",
             initialFilter="Json Files (*.json)",
         )
@@ -187,6 +189,7 @@ class ScanSettings(AbcUI):
                     is_window_top=self.target_page._is_window_top
                 ))
             except Exception as e:
+                traceback.print_exception(e)
                 QMessageBox.critical(self.widget, "警告", f"导入失败\n{type(e)}:\n{e}")
                 self.import_btn.setEnabled(True)
                 return
@@ -202,6 +205,8 @@ class ScanSettings(AbcUI):
             result_list.addItem(item)
             result_list.setItemWidget(item, widget)
             QApplication.processEvents()
+
+        self.import_btn.setEnabled(True)
 
     @showException
     def _on_export(self, *_):
