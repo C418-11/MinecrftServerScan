@@ -408,6 +408,40 @@ class ServerScan(AbcUI):
         msg_box.setStandardButtons(QMessageBox.StandardButton.Close)
 
         @showException
+        def _export(*_):
+            try:
+                if not os.path.exists("./.export"):
+                    os.makedirs("./.export", exist_ok=True)
+            except Exception as e:
+                QMessageBox.critical(self.widget, "提示", f"未能创建输出文件夹\n{type(e)}:\n{e}")
+
+            file_path, _ = QFileDialog.getSaveFileName(
+                caption="导出",
+                directory="./.export/RawServerData.json",
+                filter="All Files (*);;Json Files (*.json);;Text Files (*.txt)",
+                initialFilter="Json Files (*.json)",
+            )
+            if not file_path:
+                return 
+
+            data = {
+                "host": host,
+                "port": port,
+                "data": server_info.raw_data
+            }
+            try:
+                with open(file_path, mode="w", encoding="utf-8") as f:
+                    json.dump(data, f, sort_keys=True, indent=2)
+            except Exception as e:
+                QMessageBox.critical(self.widget, "警告", f"导出失败\n{type(e)}:\n{e}")
+                raise
+
+        export_button = QPushButton("导出数据")
+        # noinspection PyUnresolvedReferences
+        export_button.clicked.connect(_export)
+        msg_box.addButton(export_button, QMessageBox.ButtonRole.ActionRole)
+
+        @showException
         def _copy_server_address(*_):
             clipboard = QApplication.clipboard()
             clipboard.setText(f"{host}:{port}")
@@ -415,7 +449,6 @@ class ServerScan(AbcUI):
         copy_button = QPushButton("复制地址")
         # noinspection PyUnresolvedReferences
         copy_button.clicked.connect(_copy_server_address)
-
         msg_box.addButton(copy_button, QMessageBox.ButtonRole.ActionRole)
 
         @showException
@@ -438,11 +471,9 @@ class ServerScan(AbcUI):
         save_button = QPushButton("保存图标")
         # noinspection PyUnresolvedReferences
         save_button.clicked.connect(_save_server_favicon)
-
         msg_box.addButton(save_button, QMessageBox.ButtonRole.ActionRole)
 
         msg_box.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, self._is_window_top())
-
         msg_box.exec()
 
     def log(self, root: list[str] | list, text: str, level: LogLevel = LogLevel.INFO):

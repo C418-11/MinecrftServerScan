@@ -169,7 +169,9 @@ class ScanSettings(AbcUI):
             self.import_btn.setEnabled(True)
             raise
 
-        if not isinstance(servers, list):
+        if isinstance(servers, dict):
+            servers = [servers]
+        elif not isinstance(servers, list):
             QMessageBox.critical(self.widget, "警告", "损坏的文件")
             self.import_btn.setEnabled(True)
             return
