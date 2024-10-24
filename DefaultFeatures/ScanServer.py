@@ -422,7 +422,7 @@ class ServerScan(AbcUI):
                 initialFilter="Json Files (*.json)",
             )
             if not file_path:
-                return 
+                return
 
             data = {
                 "host": host,

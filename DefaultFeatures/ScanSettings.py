@@ -7,37 +7,40 @@ __version__ = "0.0.2Dev"
 import json
 import os
 import traceback
-from typing import Union, override, Any
+from typing import Any
+from typing import Union
+from typing import override
 
-from PyQt5.QtCore import Qt, QSize
-from PyQt5.QtWidgets import QCheckBox
+from PyQt5.QtCore import QSize
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication
-from PyQt5.QtWidgets import QFileDialog
-from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtWidgets import QCheckBox
 from PyQt5.QtWidgets import QComboBox
 from PyQt5.QtWidgets import QDoubleSpinBox
-from PyQt5.QtWidgets import QHBoxLayout
+from PyQt5.QtWidgets import QFileDialog
 from PyQt5.QtWidgets import QGridLayout
+from PyQt5.QtWidgets import QHBoxLayout
 from PyQt5.QtWidgets import QLabel
 from PyQt5.QtWidgets import QListWidget
 from PyQt5.QtWidgets import QListWidgetItem
+from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtWidgets import QPushButton
 from PyQt5.QtWidgets import QSpinBox
 from PyQt5.QtWidgets import QTabWidget
 from PyQt5.QtWidgets import QVBoxLayout
 from PyQt5.QtWidgets import QWidget
 
-from Lib.ParseMCServerInfo import ServerInfo
-from MinecraftServerScanner.Events import ABCEvent
-from MinecraftServerScanner.Events import StartEvent
-from MinecraftServerScanner.Events import FinishEvent
-from UI.RangedSpin import RangedSpinBox
-from UI.Main import UiMain
 from DefaultFeatures.ScanServer import ServerScan
 from DefaultFeatures.ScanServer import _spawn_info_widget
+from Lib.ParseMCServerInfo import ServerInfo
+from MinecraftServerScanner.Events import ABCEvent
+from MinecraftServerScanner.Events import FinishEvent
+from MinecraftServerScanner.Events import StartEvent
 from UI.ABC import AbcUI
 from UI.LogList import LogLevel
 from UI.LogList import NonUsable
+from UI.Main import UiMain
+from UI.RangedSpin import RangedSpinBox
 from UI.RegisterUI import register
 from UI.tools import showException
 

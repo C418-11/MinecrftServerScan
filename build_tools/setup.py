@@ -6,10 +6,10 @@ __version__ = "0.0.1Dev"
 
 import os
 import re
+import shutil
 import subprocess
 import traceback
 from typing import Union
-import shutil
 
 from Cython.Build import cythonize
 from setuptools import setup

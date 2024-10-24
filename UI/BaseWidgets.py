@@ -22,8 +22,8 @@ from PyQt5.QtGui import QPainter
 from PyQt5.QtGui import QPainterPath
 from PyQt5.QtGui import QResizeEvent
 from PyQt5.QtGui import QWheelEvent
-from PyQt5.QtWidgets import QApplication
 from PyQt5.QtWidgets import QAbstractScrollArea
+from PyQt5.QtWidgets import QApplication
 from PyQt5.QtWidgets import QVBoxLayout
 from PyQt5.QtWidgets import QWidget
 
