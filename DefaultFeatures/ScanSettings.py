@@ -207,6 +207,7 @@ class ScanSettings(AbcUI):
             QApplication.processEvents()
 
         self.import_btn.setEnabled(True)
+        self._main_ui.TopTab.setCurrentIndex(self._main_ui.TopTab.indexOf(self.target_page.getMainWidget()))
 
     @showException
     def _on_export(self, *_):
