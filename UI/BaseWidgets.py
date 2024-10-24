@@ -23,7 +23,7 @@ from PyQt5.QtGui import QPainterPath
 from PyQt5.QtGui import QResizeEvent
 from PyQt5.QtGui import QWheelEvent
 from PyQt5.QtWidgets import QApplication
-from PyQt5.QtWidgets import QScrollArea
+from PyQt5.QtWidgets import QAbstractScrollArea
 from PyQt5.QtWidgets import QVBoxLayout
 from PyQt5.QtWidgets import QWidget
 
@@ -151,7 +151,7 @@ class RoundShadow(QWidget):
         self.fillet()
 
 
-class SmoothlyScrollArea(QScrollArea):
+class SmoothlyScrollAreaMixin(QAbstractScrollArea):
     """ A scroll area which can scroll smoothly """
 
     @showException
@@ -296,7 +296,7 @@ __all__ = (
     "GetScale",
     "Radius",
     "RoundShadow",
-    "SmoothlyScrollArea",
+    "SmoothlyScrollAreaMixin",
     "SmoothMode",
     "MatplotlibWidget"
 )
