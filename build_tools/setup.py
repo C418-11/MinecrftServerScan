@@ -132,7 +132,7 @@ def _main():
         # compiler.make(fr"{lib_path}\__future__.py")
         compiler.make_all(fr"{stdlib_path}\concurrent\futures")
         compiler.make_all(fr"{lib_path}\func_timeout")
-        # compiler.make_all(fr"{lib_path}\json")
+        compiler.make_all(fr"{lib_path}\json")
         shutil.copytree(
             fr"{lib_path}\PIL",
             os.path.join(compiler.pyd_path, "PIL"),

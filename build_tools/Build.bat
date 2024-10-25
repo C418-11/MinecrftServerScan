@@ -19,7 +19,7 @@ CHOICE /M "现在开始"
 IF %ERRORLEVEL% NEQ 1 (
   GOTO EOF
 )
-CD ..\dist\ServerScan
+CD "../dist/ServerScanner"
 START /WAIT /B DebugConsole
 EXIT 0
 :EOF

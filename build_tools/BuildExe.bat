@@ -14,7 +14,7 @@ IF NOT EXIST "%CONFIG_PYINSTALLER%" (
   EXIT %ERRORLEVEL%
 )
 
-START /B /WAIT %CONFIG_PYINSTALLER% -D main.py -n ServerScan -i "icon16px.png" --clean -y --hide-console hide-early
+START /B /WAIT %CONFIG_PYINSTALLER% -D main.py -n ServerScanner -i "icon16px.png" --clean -y --hide-console hide-early
 IF %ERRORLEVEL% NEQ 0 (
   ECHO "Error. (%ERRORLEVEL%)"
   EXIT %ERRORLEVEL%
