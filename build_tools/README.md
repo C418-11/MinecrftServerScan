@@ -7,8 +7,8 @@
 1. 此工具仅支持`Windows10+`
 2. 必须安装`Python3.12`及项目根目录[`requirements[点击跳转]`](../requirements.txt)存储的必要库
 3. D盘的构建临时文件夹`$.MSS`目录树会有改动，不要增改目录内容
-4. 同上不要增改项目目录下[`..\build_tools\Build[点击跳转]`](Build)的内容
-5. 同上构建输出文件夹[`..\dist[点击跳转]`](../dist)的内容在每次构建时会被覆盖，长期使用该构建结果应复制ServerScan文件夹到别处使用
+4. 同上不要增改项目目录下[`../build_tools/Build[点击跳转]`](Build)的内容
+5. 同上构建输出文件夹[`../dist[点击跳转]`](../dist)的内容在每次构建时会被覆盖，长期使用该构建结果应复制ServerScan文件夹到别处使用
 
 ---
 
@@ -22,12 +22,21 @@
     ```
 
 2. **_[配置](./BuildConfig.bat)_**
-    1. `CONFIG_PYTHON`
+    1. [`BuildConfig.bat[点击跳转]`](./BuildConfig.bat)
 
-       python.exe的位置(一般位于\Scripts\python.exe)
-    2. `CONFIG_PYINSTALLER`
+        1. `CONFIG_PYTHON`
 
-       pyinstaller.exe的位置(一般位于\Scripts\pyinstaller.exe)
+           python.exe的位置(一般位于Python312/Scripts/python.exe)
+        2. `CONFIG_PYINSTALLER`
+
+           pyinstaller.exe的位置(一般位于Python312/Scripts/pyinstaller.exe)
+    2. [`setup.py[点击跳转]`](./setup.py)
+        1. `lib_path`
+
+           指定Python第三方库路径(一般位于Python312/Lib/site-packages)
+        2. `stdlib_path`
+
+           指定Python标准库路径(一般位于Python312/Lib)
 
 3. **开始构建**
 
