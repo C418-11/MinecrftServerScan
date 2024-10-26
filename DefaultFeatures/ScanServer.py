@@ -107,7 +107,8 @@ class SmoothListWidget(QListWidget, SmoothlyScrollAreaMixin):
         super().__init__(*args)
         self.setVerticalScrollMode(QAbstractItemView.ScrollPerPixel)
 
-        self.stepRatio = 1
+        self.stepRatio = .5
+        self.duration = 500
 
 
 class SmoothLogListWidget(LogListWidget, SmoothlyScrollAreaMixin):

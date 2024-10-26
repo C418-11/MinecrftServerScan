@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # cython: language_level = 3
 
+from collections import OrderedDict
 from collections import deque
 from dataclasses import dataclass
 from enum import Enum
@@ -155,15 +156,12 @@ class SmoothlyScrollAreaMixin(QAbstractScrollArea):
     """ A scroll area which can scroll smoothly """
 
     @showException
-    def __init__(self, parent=None, orient=Qt.Vertical):
+    def __init__(self, parent: Optional[QWidget] = None, orient: Qt.Orientations = Qt.Vertical):
         """
-        Parameters
-        ----------
-        parent: QWidget
-            parent widget
-
-        orient: Orientation
-            scroll orientation
+        :param parent: parent widget
+        :type parent: Optional[QWidget]
+        :param orient: scroll orientation
+        :type orient: Qt.Orientations
         """
         super().__init__(parent)
         self.orient = orient
@@ -172,11 +170,15 @@ class SmoothlyScrollAreaMixin(QAbstractScrollArea):
         self.stepsTotal: int = 0
         self.stepRatio: float = 4
         self.acceleration: float = 1
+        self.accelerationModifiers: OrderedDict[Qt.KeyboardModifiers, float] = OrderedDict([
+            (Qt.ControlModifier, 2),
+            (Qt.ShiftModifier, .5),
+        ])
         self.lastWheelEvent: Optional[QWheelEvent] = None
-        self.scrollStamps: deque = deque()
-        self.stepsLeftQueue: deque = deque()
+        self.scrollStamps: deque[int] = deque()
+        self.stepsLeftQueue: deque[list[float]] = deque()
         self.smoothMoveTimer: QTimer = QTimer(self)
-        self.smoothMode: SmoothMode = SmoothMode(SmoothMode.LINEAR)
+        self.smoothMode: SmoothMode = SmoothMode.LINEAR
         # noinspection PyUnresolvedReferences
         self.smoothMoveTimer.timeout.connect(self._smoothMove)
 
@@ -187,7 +189,7 @@ class SmoothlyScrollAreaMixin(QAbstractScrollArea):
 
     @showException
     @override
-    def wheelEvent(self, e):
+    def wheelEvent(self, e: QWheelEvent):
         if self.smoothMode == SmoothMode.NO_SMOOTH:
             super().wheelEvent(e)
             return
@@ -198,16 +200,17 @@ class SmoothlyScrollAreaMixin(QAbstractScrollArea):
             self.scrollStamps.popleft()
 
         acceleration_ratio = min(len(self.scrollStamps) / 15, 1)
-        if not self.lastWheelEvent:
-            self.lastWheelEvent = QWheelEvent(e)
-        else:
-            self.lastWheelEvent = e
+        self.lastWheelEvent = e
 
         self.stepsTotal = self.fps * self.duration / 1000
 
         delta = e.angleDelta().y() * self.stepRatio
         if self.acceleration > 0:
             delta += delta * self.acceleration * acceleration_ratio
+
+        for mod, ratio in self.accelerationModifiers.items():
+            if self.lastWheelEvent.modifiers() & mod:
+                delta *= ratio
 
         self.stepsLeftQueue.append([delta, self.stepsTotal])
 
@@ -216,7 +219,7 @@ class SmoothlyScrollAreaMixin(QAbstractScrollArea):
     @showException
     def _smoothMove(self):
         """ scroll smoothly when timer time out """
-        total_delta = 0
+        total_delta: float = 0
 
         for i in self.stepsLeftQueue:
             total_delta += self._subDelta(i[0], i[1])
@@ -240,7 +243,7 @@ class SmoothlyScrollAreaMixin(QAbstractScrollArea):
             round(total_delta),
             self.orient,
             self.lastWheelEvent.buttons(),
-            Qt.NoModifier
+            self.lastWheelEvent.modifiers()
         )
 
         QApplication.sendEvent(bar, e)
@@ -249,7 +252,7 @@ class SmoothlyScrollAreaMixin(QAbstractScrollArea):
             self.smoothMoveTimer.stop()
 
     @showException
-    def _subDelta(self, delta, steps_left):
+    def _subDelta(self, delta: float, steps_left: float) -> float:
         """ get the interpolation for each step """
         m = self.stepsTotal / 2
         x = abs(self.stepsTotal - steps_left - m)
