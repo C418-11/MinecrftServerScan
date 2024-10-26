@@ -519,10 +519,6 @@ class ServerScan(AbcUI):
                 "  color: white;"
                 "};"
             )
-            self.ip_input.setStyleSheet(
-                "color: default;"
-                "background: none"
-            )
 
         self.widget.setLayout(QVBoxLayout())
         self.widget.layout().setContentsMargins(0, 0, 0, 0)
