@@ -151,7 +151,7 @@ def _spawn_info_widget(server_info: ServerInfo, host: str, port: int, *, is_wind
 
     version_label = QLabel()
     version_label.setText(server_info.version.name)
-    version_label.setAlignment(Qt.AlignLeft)
+    version_label.setMinimumWidth(200)
     info_layout.addWidget(version_label)
 
     host_port_label = QLabel()
