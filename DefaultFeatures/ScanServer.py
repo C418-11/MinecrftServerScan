@@ -18,6 +18,7 @@ from PyQt5.QtCore import QSize
 from PyQt5.QtCore import Qt
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtGui import QFont
+from PyQt5.QtWidgets import QAbstractItemView
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtWidgets import QComboBox
 from PyQt5.QtWidgets import QFileDialog
@@ -48,6 +49,7 @@ from MinecraftServerScanner.Events import ThreadFinishEvent
 from MinecraftServerScanner.Events import ThreadStartEvent
 from MinecraftServerScanner.Scanner import Scanner
 from UI.ABC import AbcUI
+from UI.BaseWidgets import SmoothlyScrollAreaMixin
 from UI.LogList import LogLevel
 from UI.LogList import LogListWidget
 from UI.RegisterUI import register
@@ -98,6 +100,22 @@ class CallbackPushButton(QPushButton):
 
     def __init__(self, *args):
         super().__init__(*args)
+
+
+class SmoothListWidget(QListWidget, SmoothlyScrollAreaMixin):
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.setVerticalScrollMode(QAbstractItemView.ScrollPerPixel)
+
+        self.stepRatio = 1
+
+
+class SmoothLogListWidget(LogListWidget, SmoothlyScrollAreaMixin):
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.setVerticalScrollMode(QAbstractItemView.ScrollPerPixel)
+
+        self.stepRatio = 1
 
 
 def _html_add_background_color(
@@ -224,10 +242,10 @@ class ServerScan(AbcUI):
         self.ip_input: QComboBox | None = None
         self.scan_button: CallbackPushButton | None = None
 
-        self.show_result_list: QListWidget | None = None
+        self.show_result_list: SmoothListWidget | None = None
         self.result_count_label: QLabel | None = None
 
-        self.show_log: LogListWidget | None = None
+        self.show_log: SmoothLogListWidget | None = None
         self.progress_bar: QProgressBar | None = None
 
         self.scanner: Scanner | None = None
@@ -486,13 +504,13 @@ class ServerScan(AbcUI):
         self.result_count_label = QLabel(self.widget)
         self.result_count_label.setAlignment(Qt.AlignCenter)
 
-        self.show_log = LogListWidget(self.widget)
+        self.show_log = SmoothLogListWidget(self.widget)
         self.show_log.setStyleSheet("background-color: rgba(255, 0, 0, 64);")
         self.show_log.setAutoScroll(True)
         self.progress_bar = QProgressBar(self.widget)
         self.progress_bar.setMinimum(0)
 
-        self.show_result_list = QListWidget(self.widget)
+        self.show_result_list = SmoothListWidget(self.widget)
 
         if os.path.exists("./Textures/light_dirt_background.png"):
             self.widget.setStyleSheet(
