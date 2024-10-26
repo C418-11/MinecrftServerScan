@@ -128,11 +128,13 @@ def _main():
         compiler.make_all(fr"{base_path}\UI")
         compiler.make_all(fr"{base_path}\MinecraftServerScanner")
 
+        compiler.make_all(fr"{lib_path}\func_timeout")
         compiler.make(fr"{stdlib_path}\uuid.py")
         compiler.make(fr"{stdlib_path}\__future__.py")  # PIL依赖
         compiler.make_all(fr"{stdlib_path}\concurrent\futures")
-        compiler.make_all(fr"{lib_path}\func_timeout")
         compiler.make_all(fr"{stdlib_path}\json")
+        # noinspection SpellCheckingInspection
+        compiler.make(fr"{stdlib_path}\webbrowser.py")
         shutil.copytree(
             fr"{lib_path}\PIL",
             os.path.join(compiler.pyd_path, "PIL"),
