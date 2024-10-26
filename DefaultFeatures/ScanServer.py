@@ -2,7 +2,7 @@
 # cython: language_level = 3
 
 __author__ = "C418____11 <553515788@qq.com>"
-__version__ = "0.0.4Dev"
+__version__ = "0.0.5Dev"
 
 import json
 import os
@@ -114,7 +114,7 @@ def _html_add_background_color(
     )
 
 
-def _spawn_info_widget(server_info: ServerInfo, host: str, port: int, *, is_window_top: Callable[[], bool]):
+def _spawn_info_widget(server_info: ServerInfo, host: str, port: int, *, is_window_top: Callable[[], bool]) -> QWidget:
     widget = QWidget()
     widget.setToolTip("双击显示详细信息")
     root_layout = QHBoxLayout()
@@ -157,23 +157,7 @@ def _spawn_info_widget(server_info: ServerInfo, host: str, port: int, *, is_wind
     host_port_label = QLabel()
     host_port_label.setText(f"{host}:{port}")
     host_port_label.setAlignment(Qt.AlignCenter)
-    info_layout.addWidget(host_port_label)
-
-    player_label = QLabel()
-    player_label.setText(f"{server_info.players.online}/{server_info.players.max}")
-    player_label.setAlignment(Qt.AlignRight)
-    info_layout.addWidget(player_label)
-
-    desc_layout = QVBoxLayout()
-    desc_layout.setContentsMargins(0, 0, 0, 0)
-    desc_layout.setSpacing(0)
-    details_layout.addLayout(desc_layout)
-
-    desc_label = QLabel()
-    desc_html = server_info.description.to_html()
-    desc_html = "<span>" + desc_html.replace('\n', "<br/>") + "</span>"
-    desc_label.setText(desc_html)
-    desc_layout.addWidget(desc_label)
+    info_layout.addWidget(host_port_label, Qt.AlignCenter)
 
     @showException
     def _show_player_list(*_):
@@ -209,12 +193,22 @@ def _spawn_info_widget(server_info: ServerInfo, host: str, port: int, *, is_wind
         msg_box.setText(player_html)
         msg_box.exec()
 
-    player_list_button = QPushButton()
-    player_list_button.setCursor(Qt.CursorShape.PointingHandCursor)
-    player_list_button.setText("玩家列表")
+    player_label = QPushButton()
+    player_label.setText(f"{server_info.players.online}/{server_info.players.max}")
     # noinspection PyUnresolvedReferences
-    player_list_button.clicked.connect(_show_player_list)
-    desc_layout.addWidget(player_list_button)
+    player_label.clicked.connect(_show_player_list)
+    info_layout.addWidget(player_label)
+
+    desc_layout = QVBoxLayout()
+    desc_layout.setContentsMargins(0, 0, 0, 0)
+    desc_layout.setSpacing(0)
+    details_layout.addLayout(desc_layout)
+
+    desc_label = QLabel()
+    desc_html = server_info.description.to_html()
+    desc_html = "<span>" + desc_html.replace('\n', "<br/>") + "</span>"
+    desc_label.setText(desc_html)
+    desc_layout.addWidget(desc_label)
 
     return widget
 
@@ -508,7 +502,8 @@ class ServerScan(AbcUI):
                 "};"
             )
             self.ip_input.setStyleSheet(
-                "color: default"
+                "color: default;"
+                "background: none"
             )
 
         self.widget.setLayout(QVBoxLayout())
