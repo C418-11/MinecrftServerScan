@@ -292,7 +292,7 @@ class ColorString:
         def _parse_extra(data: dict) -> Self:
             results: list[str] = []
             for item in data["extra"]:
-                obj: Self = _parse_text(item)
+                obj: Self = cls.from_obj(item)
                 results.extend(obj.to_string())
 
             return cls.from_string(''.join(results))
