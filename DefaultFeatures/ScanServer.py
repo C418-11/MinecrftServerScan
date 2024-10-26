@@ -441,7 +441,8 @@ class ServerScan(AbcUI):
         search_mods_btn = QPushButton("搜索模组")
         # noinspection PyUnresolvedReferences
         search_mods_btn.clicked.connect(_search_mods)
-        msg_box.addButton(search_mods_btn, QMessageBox.ButtonRole.ActionRole)
+        if (server_info.mods is not None) and server_info.mods:
+            msg_box.addButton(search_mods_btn, QMessageBox.ButtonRole.ActionRole)
 
         @showException
         def _export(*_):
