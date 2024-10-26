@@ -15,6 +15,7 @@ from PyQt5.QtWidgets import QApplication
 from PyQt5.QtWidgets import QMainWindow
 from tqdm import tqdm
 
+sys.path.append(os.path.abspath("."))
 import FeatureLoader
 from Lib.Configs import BASE_PATH
 from Lib.Configs import init as init_configs
