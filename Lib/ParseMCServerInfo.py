@@ -148,6 +148,19 @@ class Favicon:
         return self._raw_data
 
 
+class Mod(ForInRepr):
+    def __init__(self, raw_data: dict):
+        self._raw_data = raw_data
+
+    @property
+    def name(self) -> str:
+        return self._raw_data["name"]
+
+    @property
+    def version(self) -> str:
+        return self._raw_data["version"]
+
+
 class ServerInfo(ForInRepr):
     def __init__(self, raw_data: dict):
         self._raw_data = raw_data
@@ -167,6 +180,20 @@ class ServerInfo(ForInRepr):
     @property
     def version(self) -> Version:
         return Version(self._raw_data["version"])
+
+    @property
+    def mods(self) -> list[Mod] | None:
+        if self.forgeData is not None:
+            forge_mods = self.forgeData.mods
+            return [Mod({"name": x.modId, "version": x.modmarker}) for x in forge_mods]
+
+        # noinspection SpellCheckingInspection
+        mod_info = self.raw_data.get("modinfo")
+        if mod_info is not None:
+            # noinspection SpellCheckingInspection
+            return [Mod({"name": x["modid"], "version": x["version"]}) for x in mod_info["modList"]]
+
+        return None
 
     @property
     def forgeData(self) -> ForgeData | None:

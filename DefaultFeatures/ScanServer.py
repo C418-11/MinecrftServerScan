@@ -9,6 +9,8 @@ import os
 import socket
 import sys
 import threading
+import time
+import webbrowser
 from typing import Callable
 from typing import override
 
@@ -39,6 +41,7 @@ from Lib.Configs import NormalFont
 from Lib.Configs import SmallFont
 from Lib.Configs import read_default_yaml
 from Lib.MinecraftColorString import ColorString
+from Lib.ParseMCServerInfo import Mod
 from Lib.ParseMCServerInfo import ServerInfo
 from Lib.StdColor import ColorWrite
 from MinecraftServerScanner.Events import ABCEvent
@@ -369,6 +372,9 @@ class ServerScan(AbcUI):
     @showException
     def _showServerDetails(self, item: QListWidgetItem):
         server_info, host, port = item.data(Qt.UserRole)
+        server_info: ServerInfo
+        host: str
+        port: int
 
         html_space = "&nbsp;"
 
@@ -386,10 +392,16 @@ class ServerScan(AbcUI):
         else:
             player_list_str = ''
 
-        if server_info.forgeData is not None:
-            mod_list_str = "服务端模组列表:\n"
-            for mod in server_info.forgeData.mods:
-                mod_list_str += f"{html_space * 4}{mod.modId}{html_space}({mod.modmarker})\n"
+        if server_info.mods is not None:
+            mod_list_str = ''
+            if server_info.forgeData is not None:
+                mod_list_str += "Forge\n"
+            mod_list_str += "服务端模组列表:\n"
+            for mod in server_info.mods:
+                mod: Mod
+                mod_list_str += f"{html_space * 4}{mod.name}{html_space}({mod.version})\n"
+            if not server_info.mods:
+                mod_list_str += f"{html_space * 4}无模组\n"
         else:
             mod_list_str = ''
 
@@ -419,6 +431,17 @@ class ServerScan(AbcUI):
         msg_box.setWindowTitle("服务器详情")
         msg_box.setText(message)
         msg_box.setStandardButtons(QMessageBox.StandardButton.Close)
+
+        @showException
+        def _search_mods(*_):
+            for x in server_info.mods:
+                webbrowser.open(f"https://search.mcmod.cn/s?key={x.name}")
+                time.sleep(2)
+
+        search_mods_btn = QPushButton("搜索模组")
+        # noinspection PyUnresolvedReferences
+        search_mods_btn.clicked.connect(_search_mods)
+        msg_box.addButton(search_mods_btn, QMessageBox.ButtonRole.ActionRole)
 
         @showException
         def _export(*_):
