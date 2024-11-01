@@ -119,7 +119,8 @@ class SmoothLogListWidget(LogListWidget, SmoothlyScrollAreaMixin):
         super().__init__(*args)
         self.setVerticalScrollMode(QAbstractItemView.ScrollPerPixel)
 
-        self.stepRatio = 1
+        self.stepRatio = .5
+        self.duration = 300
 
 
 def _html_add_background_color(
@@ -260,6 +261,12 @@ class ServerScan(AbcUI):
         self.scan_connect_timeout = 0.9
         self.scan_parse_timeout = 1
 
+        self.ignored_error: set[type[BaseException]] = {
+            TimeoutError,
+            socket.gaierror,
+            ConnectionRefusedError
+        }
+
     def _is_window_top(self) -> bool:
         flags = self.widget.window().windowFlags() & Qt.WindowType.WindowStaysOnTopHint
         return flags == Qt.WindowType.WindowStaysOnTopHint
@@ -289,9 +296,7 @@ class ServerScan(AbcUI):
             self.show_result_list.setItemWidget(item, widget)
 
         def _parse_thread_error(e: ThreadErrorEvent):
-            if type(e.error) is TimeoutError:
-                return
-            if type(e.error) is socket.gaierror:
+            if type(e.error) in self.ignored_error:
                 return
             self.log([e.port], f"意外的错误 {type(e.error).__name__}: {e.error}", LogLevel.ERROR)
 
