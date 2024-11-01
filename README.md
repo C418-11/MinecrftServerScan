@@ -43,7 +43,9 @@
 
 ## 下载
 
-暂未提供打包好的版本
+[`win10~11最新版(点击跳转)`](https://github.com/C418-11/MinecrftServerScan/releases/latest)
+
+其他版本暂未提供
 
 * 打包好的程序包含运行环境，如果你只是希望普通使用此工具无需往下阅读
 
