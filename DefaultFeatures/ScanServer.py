@@ -411,7 +411,7 @@ class ServerScan(AbcUI):
             mod_list_str = ''
 
         message = "<span>"
-        message += f"服务器地址: {host}:{port}"
+        message += f"服务器地址: {host}:{port} | "
         message += f"服务端版本: {server_info.version.name}\n"
         message += f"服务器描述:\n{description_html}\n"
         message += f"在线玩家: {server_info.players.online}/{server_info.players.max}\n"
