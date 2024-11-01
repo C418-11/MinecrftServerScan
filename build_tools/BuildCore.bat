@@ -27,7 +27,6 @@ IF EXIST Build/pyd (
 )
 
 TITLE BuildTool - Build
-
 ECHO Building pyd... (logging with ".log\latest-pyd.txt")
 START /B /WAIT BuildPyd > ".log\latest-pyd.txt"
 IF %ERRORLEVEL% NEQ 0 (
@@ -36,6 +35,7 @@ IF %ERRORLEVEL% NEQ 0 (
 )
 COPY /V CleanBuild.bat "D:\$.MSS"
 
+TITLE BuildTool - Build
 ECHO Building exe...
 START /B /WAIT BuildExe
 IF %ERRORLEVEL% NEQ 0 (
