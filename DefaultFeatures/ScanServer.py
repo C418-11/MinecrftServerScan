@@ -35,11 +35,10 @@ from PyQt5.QtWidgets import QTabWidget
 from PyQt5.QtWidgets import QVBoxLayout
 from PyQt5.QtWidgets import QWidget
 
-from Lib.Configs import BASE_PATH
-from Lib.Configs import FontFamily
-from Lib.Configs import NormalFont
-from Lib.Configs import SmallFont
-from Lib.Configs import read_default_yaml
+from GlobalConfigs import FontFamily
+from GlobalConfigs import NormalFont
+from GlobalConfigs import SmallFont
+from Lib.Config import requireConfig
 from Lib.MinecraftColorString import ColorString
 from Lib.ParseMCServerInfo import Mod
 from Lib.ParseMCServerInfo import ServerInfo
@@ -60,8 +59,8 @@ from UI.tools import getDefaultImage
 from UI.tools import showException
 
 # noinspection SpellCheckingInspection
-_config_file = read_default_yaml(
-    os.path.join(BASE_PATH, 'ScanServer.yaml'),
+_config_file = requireConfig(
+    '', 'ScanServer.yaml',
     {
         "DefaultServerIcon": "./Textures/DefaultServerIcon.png",
         "DefaultTarget": [
@@ -95,7 +94,7 @@ _config_file = read_default_yaml(
             # "us-sjc-bgp-1.openfrp.top",
             # "us-sjc-bgp-2.openfrp.top"
         ]
-    })
+    }).checkConfig()
 
 
 class CallbackPushButton(QPushButton):

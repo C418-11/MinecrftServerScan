@@ -284,7 +284,9 @@ class SmoothMode(Enum):
 class MatplotlibWidget(QWidget):
 
     def __init__(self, parent=None):
+        # noinspection PyPackageRequirements,PyUnresolvedReferences
         from matplotlib.figure import Figure
+        # noinspection PyPackageRequirements,PyUnresolvedReferences
         from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
         super().__init__(parent)
 

@@ -4,7 +4,6 @@
 __author__ = "C418____11 <553515788@qq.com>"
 __version__ = "MSS-0.0.8Dev"
 
-import os
 import sys
 import traceback
 
@@ -16,20 +15,20 @@ from PyQt5.QtWidgets import QMainWindow
 from tqdm import tqdm
 
 import FeatureLoader
-from Lib.Configs import BASE_PATH
-from Lib.Configs import init as init_configs
-from Lib.Configs import read_default_yaml
+from GlobalConfigs import init as init_configs
+from Lib.Config import DefaultConfigPool
+from Lib.Config import requireConfig
 from Lib.StdColor import ColorWrite
 from UI import RegisterUI
 from UI.Main import UiMain
 from UI.tools import getDefaultImage
 
-_load_other_futures = read_default_yaml(
-    os.path.join(BASE_PATH, 'FuturesLoad.yaml'),
+_load_other_futures = requireConfig(
+    '', "FuturesLoad.yaml",
     {
         "Load": False,
     }
-)
+).checkConfig()
 
 
 def main():
@@ -42,7 +41,7 @@ def main():
 
     FeatureLoader.load_default_features()
 
-    if _load_other_futures.get_default("Load", False) is True:
+    if _load_other_futures.get("Load", False) is True:
         try:
             FeatureLoader.load_other_features()
         except Exception as e:
@@ -93,6 +92,7 @@ if __name__ == "__main__":
     print(f"Core Author: {__author__}", file=_green_write)
     print(f"内核版本号: {__version__}", file=_green_write)
     print(f"内核作者: {__author__}", file=_green_write)
+    DefaultConfigPool.saveAll()
     main()
 
 __all__ = ("main",)

@@ -11,7 +11,7 @@ from typing import override
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 
-from Lib.Configs import MinimumSize
+from GlobalConfigs import MinimumSize
 from UI.ABC import AbcUI
 from UI.tools import showException
 

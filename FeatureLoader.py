@@ -12,21 +12,22 @@ import traceback
 
 import colorama
 
-from Lib.Configs import BASE_PATH
-from Lib.Configs import read_default_yaml
+from Lib.Config import requireConfig
+from Lib.Config import RuamelYamlSL
 from Lib.StdColor import ColorWrite
 
-DefaultFeatures = read_default_yaml(
-    os.path.join(BASE_PATH, "DefaultFeatures.yaml"),
+RuamelYamlSL.enable()
+RuamelYamlSL().registerTo()
+
+DefaultFeatures = requireConfig(
+    '', "DefaultFeatures.yaml",
     {
         "1|WindowTop": True,  # 这里的 '|' 是为了读取后进行排序
         "2|Opacity": True,
         "3|ScanServer": True,
         "4|ScanSettings": True,
     }
-)
-
-DefaultFeatures.sort()
+).checkConfig()  # todo 排序
 
 _yellow_write = ColorWrite(sys.stdout, colorama.Fore.LIGHTYELLOW_EX)
 _blue_write = ColorWrite(sys.stdout, colorama.Fore.LIGHTBLUE_EX)
@@ -113,12 +114,10 @@ def load_default_features():
     return loaded_features
 
 
-OtherFeatures = read_default_yaml(
-    os.path.join(BASE_PATH, "OtherFeatures.yaml"),
+OtherFeatures = requireConfig(
+    '', "OtherFeatures.yaml",
     {}
-)
-
-OtherFeatures.sort()
+).checkConfig()  # todo 排序
 
 
 def load_other_features():
