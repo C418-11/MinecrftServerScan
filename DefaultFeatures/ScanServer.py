@@ -15,6 +15,7 @@ from typing import Callable
 from typing import override
 
 import colorama
+from C41811.Config import requireConfig
 from PIL import Image
 from PyQt5.QtCore import QSize
 from PyQt5.QtCore import Qt
@@ -38,7 +39,6 @@ from PyQt5.QtWidgets import QWidget
 from GlobalConfigs import FontFamily
 from GlobalConfigs import NormalFont
 from GlobalConfigs import SmallFont
-from Lib.Config import requireConfig
 from Lib.MinecraftColorString import ColorString
 from Lib.ParseMCServerInfo import Mod
 from Lib.ParseMCServerInfo import ServerInfo
@@ -144,7 +144,7 @@ def _spawn_info_widget(server_info: ServerInfo, host: str, port: int, *, is_wind
     root_layout.setSpacing(0)
     widget.setLayout(root_layout)
 
-    icon_path = _config_file.get_default("DefaultServerIcon", None)
+    icon_path = _config_file.get("DefaultServerIcon")
     # noinspection SpellCheckingInspection
     default_data = "Qk1GAAAAAAAAADYAAAAoAAAAAgAAAAIAAAABABgAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAA/wD/AAAAAAAAAAD/AP8AAA=="
     pixmap = getDefaultImage(

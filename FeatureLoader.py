@@ -11,13 +11,13 @@ import sys
 import traceback
 
 import colorama
+from C41811.Config import DefaultConfigPool
+from C41811.Config import requireConfig
+from C41811.Config.SLProcessors.ruamel_yaml import RuamelYamlSL
 
-from Lib.Config import requireConfig
-from Lib.Config import RuamelYamlSL
 from Lib.StdColor import ColorWrite
 
-RuamelYamlSL.enable()
-RuamelYamlSL().registerTo()
+RuamelYamlSL().registerTo(DefaultConfigPool)
 
 DefaultFeatures = requireConfig(
     '', "DefaultFeatures.yaml",

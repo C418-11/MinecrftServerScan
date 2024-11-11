@@ -9,6 +9,7 @@ import re
 import shutil
 import subprocess
 import traceback
+import warnings
 from typing import Union
 
 # noinspection PyPackageRequirements
@@ -22,7 +23,12 @@ def _get_dependency_versions() -> dict[str, str]:
     dependencies = result.stdout.split('\n')
     dependency_versions = {}
     for dep in dependencies:
-        if not dep:
+        if "==" not in dep:
+            if not dep:
+                continue
+            warnings.warn(
+                dep[:-1]
+            )
             continue
         dep_name, dep_version = dep.split('==')
         dependency_versions[dep_name] = dep_version

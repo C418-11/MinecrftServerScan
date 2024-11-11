@@ -6,10 +6,9 @@ __version__ = "MSS-0.0.2Alpha"
 
 import os
 
+from C41811.Config import ConfigData
+from C41811.Config import requireConfig
 from PyQt5.QtGui import QFontDatabase
-
-from Lib.Config import ConfigData
-from Lib.Config import requireConfig
 
 _screen: ConfigData = requireConfig('', "Screen.yaml", {
     "MinimumSize": {

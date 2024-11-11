@@ -8,6 +8,8 @@ import sys
 import traceback
 
 import colorama
+from C41811.Config import DefaultConfigPool
+from C41811.Config import requireConfig
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication
@@ -16,8 +18,6 @@ from tqdm import tqdm
 
 import FeatureLoader
 from GlobalConfigs import init as init_configs
-from Lib.Config import DefaultConfigPool
-from Lib.Config import requireConfig
 from Lib.StdColor import ColorWrite
 from UI import RegisterUI
 from UI.Main import UiMain
