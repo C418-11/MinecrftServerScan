@@ -1,7 +1,6 @@
 PyQt5~=5.15.10
 colorama~=0.4.6
-ruamel.yaml~=0.18.6
-C41811.Config~=0.0.1
+C41811.Config[RuamelYamlSL]~=0.2.0
 tqdm~=4.66.2
 pillow~=11.0.0
 func_timeout~=4.3.5

@@ -5,12 +5,14 @@ __author__ = "C418____11 <553515788@qq.com>"
 __version__ = "MSS-0.0.2Alpha"
 
 import os
+from typing import Any
 
 from C41811.Config import ConfigData
+from C41811.Config import MappingConfigData
 from C41811.Config import requireConfig
 from PyQt5.QtGui import QFontDatabase
 
-_screen: ConfigData = requireConfig('', "Screen.yaml", {
+_screen: MappingConfigData[dict[str, Any]] = requireConfig('', "Screen.yaml", {
     "MinimumSize": {
         "width": 680,
         "height": 520
@@ -26,7 +28,7 @@ _screen: ConfigData = requireConfig('', "Screen.yaml", {
             "Title": 20,
         }
     }
-}).checkConfig()
+}).check()
 
 try:
     MinimumSize = tuple(int(_screen["MinimumSize"][key]) for key in ("width", "height"))

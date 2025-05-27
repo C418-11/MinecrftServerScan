@@ -13,11 +13,11 @@ import traceback
 import colorama
 from C41811.Config import DefaultConfigPool
 from C41811.Config import requireConfig
-from C41811.Config.SLProcessors.ruamel_yaml import RuamelYamlSL
+from C41811.Config.processor.RuamelYaml import RuamelYamlSL
 
 from Lib.StdColor import ColorWrite
 
-RuamelYamlSL().registerTo(DefaultConfigPool)
+RuamelYamlSL().register_to(DefaultConfigPool)
 
 DefaultFeatures = requireConfig(
     '', "DefaultFeatures.yaml",
@@ -27,7 +27,7 @@ DefaultFeatures = requireConfig(
         "3|ScanServer": True,
         "4|ScanSettings": True,
     }
-).checkConfig()  # todo 排序
+).check()  # todo 排序
 
 _yellow_write = ColorWrite(sys.stdout, colorama.Fore.LIGHTYELLOW_EX)
 _blue_write = ColorWrite(sys.stdout, colorama.Fore.LIGHTBLUE_EX)
@@ -117,7 +117,7 @@ def load_default_features():
 OtherFeatures = requireConfig(
     '', "OtherFeatures.yaml",
     {}
-).checkConfig()  # todo 排序
+).check()  # todo 排序
 
 
 def load_other_features():

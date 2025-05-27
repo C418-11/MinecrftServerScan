@@ -94,7 +94,7 @@ _config_file = requireConfig(
             # "us-sjc-bgp-1.openfrp.top",
             # "us-sjc-bgp-2.openfrp.top"
         ]
-    }).checkConfig()
+    }).check()
 
 
 class CallbackPushButton(QPushButton):

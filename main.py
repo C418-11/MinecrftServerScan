@@ -8,8 +8,8 @@ import sys
 import traceback
 
 import colorama
-from C41811.Config import DefaultConfigPool
 from C41811.Config import requireConfig
+from C41811.Config import saveAll
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication
@@ -28,7 +28,7 @@ _load_other_futures = requireConfig(
     {
         "Load": False,
     }
-).checkConfig()
+).check()
 
 
 def main():
@@ -92,7 +92,7 @@ if __name__ == "__main__":
     print(f"Core Author: {__author__}", file=_green_write)
     print(f"内核版本号: {__version__}", file=_green_write)
     print(f"内核作者: {__author__}", file=_green_write)
-    DefaultConfigPool.saveAll()
+    saveAll()
     main()
 
 __all__ = ("main",)
